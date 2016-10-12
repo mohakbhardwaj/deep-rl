@@ -4,8 +4,11 @@ with openAI gym environment interface"""
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+
 from RLAgent import RLAgent
 from networks.DDPGActor import DDPGConvNetActor
+from networks.DDPGCritic import DDPGConvNetCritic
+from rl_common.ReplayBuffer import SimpleBuffer
 import gym
 import numpy as np
 
