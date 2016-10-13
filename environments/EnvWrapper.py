@@ -4,6 +4,7 @@
 # open ai gym environment. Change this to be applicable for any environment in database of 
 # environments]
 #[TODO: Accept environment name, params if any --> lookup in database file --> import appropriate env module --> return object]
+#[TODO: Wrap all the required functions for gym environment]
 import gym
 import numpy as np
 
