@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Deep Q Network with target Network
 	Hyperparameters and architecture from "Playing Atari with Deep Reinforcement Learning - Mnih et al."
 	https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
@@ -42,6 +41,7 @@ class DQNConvNet(ActionValueNetwork):
 		self.framewidth = framewidth
 
 	def create_network(self):
+		"""Constructs and initializes core network architecture"""
 		state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.frameheight, self.framewidth])
 		#Change state to correct dimensions --->Required by tfearn
 		net = tf.transpose(state_input, [0, 2, 3, 1]) 
@@ -51,6 +51,10 @@ class DQNConvNet(ActionValueNetwork):
 		net = tflearn.fully_connected(net, 512, activation = 'relu')
 		output = tflearn.fully_connected(net, self.action_length, activation = 'linear')
 		return output
+
+	def init_graph(self):
+		"""Overall architecture includingtarget network, gradient ops etc"""
+		pass
 		
 
 

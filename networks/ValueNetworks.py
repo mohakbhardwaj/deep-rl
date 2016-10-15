@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-"""Generic class for all Value Networks"""
+"""Generic class for all Value Networks
+	Created on: October 14, 2016
+	Author: Mohak Bhardwaj"""
 
 import tensorflow as tf
 import tflearn
@@ -10,7 +12,7 @@ import numpy as np
 class ValueNetwork(object):
 	def __init__(self, sess, observation_length, discount = 0.90, learning_rate = 0.0001, tau=0.001, seed = 1234):
 		raise NotImplementedError
-	def create_network(self):
+	def create_v_network(self):
 		"""Constructs and initializes neural network"""
 		raise NotImplementedError
 	def train(self, state_batch, target_batch):
@@ -34,8 +36,11 @@ class ValueNetwork(object):
 class ActionValueNetwork(object):
 	def __init__(self, sess, observation_length, action_max, action_min, action_length, discount = 0.90, learning_rate = 0.0001, tau = 0.001, seed = 1234):
 		pass
-	def create_network(self):
-		"""Constructs and initializes neural network"""
+	def create_q_network(self):
+		"""Constructs and initializes core network architecture"""
+		raise NotImplementedError
+	def init_graph(self):
+		"""Overall architecture includingtarget network, gradient ops etc"""
 		raise NotImplementedError
 	def train(self, state_batch, acction_batch, target_batch):
 		"""Train using mini-batches as input"""
