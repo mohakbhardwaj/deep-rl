@@ -6,9 +6,10 @@
    A MLP for feature input """
 import tensorflow as tf
 import numpy as np
+from ValueNetworks import ActionValueNetwork
 
 
-class DDPGCriticNetwork(object):
+class DDPGCriticNetwork(ActionValueNetwork):
 	def __init__( self
 				, env
 				, discount_factor = 0.90

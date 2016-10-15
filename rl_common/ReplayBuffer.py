@@ -45,7 +45,7 @@ class SimpleBuffer(ReplayBuffer):
     def sample_batch(self, batch_size):
         batch = []
         if self.count < batch_size:
-            batch = random.sample(self.bufer, self.count)
+            batch = random.sample(self.buffer, self.count)
         else:
             batch = random.sample(self.buffer, batch_size)
         s_batch = np.array([_[0] for _ in batch])

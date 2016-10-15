@@ -6,9 +6,10 @@
    A MLP for feature input """
 import tensorflow as tf
 import numpy as np
+import PolicyNetwork
 
 
-class DDPGActorNetwork(object):
+class DDPGActorNetwork(PolicyNetwork):
 	def __init__( self
 				, env
 				, discount_factor = 0.90
