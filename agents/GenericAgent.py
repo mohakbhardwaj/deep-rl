@@ -12,7 +12,7 @@ from rl_common.ReplayBuffer import SimpleBuffer
 import gym
 import numpy as np
 
-class DDPGAgent(RLAgent):
+class DQAgent(RLAgent):
 	def __init__(self
 				, env
 				, discount_factor = 0.90
