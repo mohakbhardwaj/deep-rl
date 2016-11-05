@@ -6,5 +6,5 @@
 
  - skimage
  
-  - openAI Gym
+ - openAI Gym
   
