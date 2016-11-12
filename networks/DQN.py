@@ -42,17 +42,23 @@ class DQNetwork(ActionValueNetwork):
 		self.framewidth = framewidth
 		self.vision = vision
 
+		#Change for compatibility with non-CNN
+		self.state_input = tf.placeholder(tf.float32,\
+			 [None, self.frameskip, self.frameheight, self.framewidth])
+			
+		self.action_output = tf.placeholder(tf.float32,[None, self.action_length])
+
+
 		self.hidden_fc = 512
-		self.model=self.init_graph()
+		self.model=self.create_network()
+		self.train_net =self.init_graph()
 
 	def create_network(self):
 		"""Constructs and initializes core network architecture"""
 
 		if self.vision:
-			state_input = tf.placeholder(tf.float32,\
-			 [None, self.frameskip, self.frameheight, self.framewidth])
 			#Change state to correct dimensions --->Required by tfearn
-			net = tf.transpose(state_input, [0, 2, 3, 1]) 
+			net = tf.transpose(self.state_input, [0, 2, 3, 1]) 
 			net = tflearn.conv_2d(net, 32, 8, stride = 4, activation = 'relu')
 			net = tflearn.conv_2d(net, 64, 4, stride = 2, activation =  'relu')
 			net = tflearn.conv_2d(net, 64, 3, stride = 1, activation = 'relu')
@@ -67,13 +73,21 @@ class DQNetwork(ActionValueNetwork):
 	def init_graph(self):
 		"""Overall architecture including target network, 
 		gradient ops etc"""
-		model=self.create_network()
 		adam = Adam(self.learning_rate, beta1=0.99)
-		model = regression(model,optimizer=adam,loss='l2')
+		d_net = regression(self.model,optimizer=adam,loss='l2')
 
-		return model
+		train_net= DNN(d_net)
+
+		self.sess.run(tf.initialize_all_variables())
+		return train_net
 			
- 
+ 	def train(self, current_state_batch,target_batch):
+ 		self.sess.run(self.train_net, feed_dict={
+            self.state_input:current_state_batch,
+            self.action_output:target_batch
+        })
+
+
 
 sess = tf.Session()
 o = 3
