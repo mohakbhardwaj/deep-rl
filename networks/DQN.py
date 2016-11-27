@@ -19,6 +19,7 @@ class DQNetwork(ActionValueNetwork):
 	def __init__(self ,\
 		num_actions ,\
 		num_observations ,\
+		batch_size ,\
 		discount_factor = 0.90 ,\
 		learning_rate = 0.0001 ,\
 		num_epochs = 1 ,\
@@ -30,6 +31,7 @@ class DQNetwork(ActionValueNetwork):
 		self.num_actions = num_actions
 		self.num_observations = num_observations
 		#Learning parameters
+		self.batch_size = batch_size
 		self.discount_factor = discount
 		self.learning_rate = learning_rate
 		self.num_epochs = num_epochs
@@ -66,12 +68,12 @@ class DQNetwork(ActionValueNetwork):
 	def init_graph(self):
 		"""Overall architecture including target network, 
 		gradient ops etc"""
-		d_net = tflearn.regression(self.model, optimizer = 'adam', loss = 'mean_squared')
+		d_net = tflearn.regression(self.model, optimizer = 'adam', loss = 'mean_squared', learning_rate = self.learning_rate)
 		train_net = tflearn.DNN(d_net)
 		return train_net
 			
  	def train(self, state_batch, target_batch):
- 		self.train_net.fit(np.asarray(state_batch), np.asarray(target_batch), show_metric = True)
+ 		self.train_net.fit(np.asarray(state_batch), np.asarray(target_batch), n_epoch = None, show_metric = True, batch_size = self.batch_size, snapshot_epoch = False)
 
  	def evaluate_values(self, input):
  		if self.vision:
@@ -89,6 +91,7 @@ class DQNetwork(ActionValueNetwork):
  			self.train_net.load("../saved_models/dqn_cnn")
  		else:
  			self.train_net.load("../saved_models/dqn_mlp")
+ 	
 
 
 sess = tf.Session()

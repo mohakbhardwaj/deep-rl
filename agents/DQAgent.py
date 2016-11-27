@@ -41,6 +41,7 @@ class DQAgent(RLAgent):
 		self.network = DQNetwork(env.num_actions,\
 								env.observation_length,\
 								self.discount_factor,\
+								self.batch_size #Give the same batch size to NN so that tflearn regression does not impose additional batch_size
 								self.learning_rate,\
 								1,\
 								self.env.history_length,\
@@ -72,8 +73,8 @@ class DQAgent(RLAgent):
 			if self.replay_buffer.size() >= self.batch_size:
 				#Sample a batch form experience buffer
 				#Calculate targets from the batch
-				#While calculating targets if some state is terminal, then target must be reward and not 
-				# R + gamma x Q*(s',a')
+				#While calculating targets if some state is terminal, then target must be R(s) and not 
+				# R(s) + gamma x Q*(s',a')
 				#Send the state batch and target batch to DQN
 			if terminal:
 				#Begin a new episode if reached terminal episode
