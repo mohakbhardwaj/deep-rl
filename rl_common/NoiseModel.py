@@ -68,6 +68,8 @@ class OUNoiseModel(NoiseModel):
 		return action_p
 	# def plot_model():
 
+class EpsilonGreedy(NoiseModel):
+	def __init__(self, )
 
 
 #[TODO:] Implement Epsilon Greedy Noise Model

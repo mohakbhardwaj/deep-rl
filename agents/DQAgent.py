@@ -22,7 +22,7 @@ class DQAgent(RLAgent):
 				 steps_per_epoch = 6000,\
 				 buffer_size = 1000000,\
 				 batch_size = 32,\
-				 scale_rewards = True,\
+				 clip_rewards = True,\
 				 vision = True):
 		
 		#Learning parameters
@@ -34,7 +34,7 @@ class DQAgent(RLAgent):
 		self.buffer_size = buffer_size
 		self.batch_size = batch_size
 		self.replay_buffer = SimpleBuffer(self.buffer_size)
-		self.scale_rewards = scale_rewards
+		self.clip_rewards = clip_rewards
 		self.vision = vision
 		# self.exploration_strategy = EpsilonGreedy(...)
 		# self.sess = tf.session()
@@ -50,16 +50,40 @@ class DQAgent(RLAgent):
 
 	def learn(self):
 		t = 0
-		state = self.env.reset() #Get the initial state
-
+		curr_state = self.env.reset() #Get the initial state
 		while t < self.max_training_steps:
 			if t%self.steps_per_epoch == 0:
 				print("Epoch Done")
 				#Print out stats here
-			while self.replay_buffer.
-			next_state, reward, terminal, info = self.env.step 
+			if self.replay_buffer.size() < self.batch_size:
+				#Initially just do random actions till you have enough frmaes to actually update
+				action = env.sample_action() #Or you could just keep epsilon as 1
+			else:
+				# action = #Get from DQN + epsilon greedy
+				# anneal epsilon here
+			next_state, reward, terminal, info = self.env.step(action)
+			#Clip the reward as it does in the DeepMind implementation
+			if self.clip_reward:
+				reward = self.clip_reward(reward, -1 , 1)
+			#Append the experience to replay buffer
+			self.replay_buffer.append(curr_state, action, reward, terminal, next_state)
 
-	def clip_reward(self, reward, upper, lower):
+			#Again check if training can be done
+			if self.replay_buffer.size() >= self.batch_size:
+				#Sample a batch form experience buffer
+				#Calculate targets from the batch
+				#While calculating targets if some state is terminal, then target must be reward and not 
+				# R + gamma x Q*(s',a')
+				#Send the state batch and target batch to DQN
+			if terminal:
+				#Begin a new episode if reached terminal episode
+				curr_state = self.env.reset()
+			else:
+				curr_state = next_state
+			#Don't forget to update the time counter!
+			t += 1
+
+	def clip_reward(self, reward, lower, upper):
 		return np.clip(reward, lower, upper)
 
 

@@ -45,15 +45,15 @@ class ActionValueNetwork(object):
 	def train(self, current_state_batch,target_batch):
 		"""Train using mini-batches as input"""
 		raise NotImplementedError
-	def evaluate_value(self, state_input, action_input):
+	def evaluate_value(self, state_input, target_input):
 		"""Return value for a state"""
 		raise NotImplementedError
 	def update_target_network(self):
 		"""Update the target network"""
 		pass
 	def save_params(self):
-		"""Save network parameters using tensorflow"""
+		"""Save network parameters to file"""
 		pass
-	def restore_params(self):
-		"""Load network parameters from file using tensorflow"""
+	def load_params(self):
+		"""Load network parameters from file"""
 		pass

@@ -71,12 +71,25 @@ class DQNetwork(ActionValueNetwork):
 		return train_net
 			
  	def train(self, state_batch, target_batch):
- 		self.train_net.fit(np.asarray(state_batch), np.asarray(target_batch), n_epoch = self.num_epochs, show_metric = True, snapshot_epoch = False)
+ 		self.train_net.fit(np.asarray(state_batch), np.asarray(target_batch), show_metric = True)
 
  	def evaluate_values(self, input):
  		if self.vision:
  			q_values = self.train_net.predict([tf.transpose(input, [0,2,3,1])])
  		return q_values
+
+ 	def save_params(self):
+ 		if self.vision:
+ 			self.train_net.save("../saved_models/dqn_cnn")
+ 		else:
+ 			self.train_net.save("../saved_models/dqn_mlp")
+
+ 	def load_params(self):
+ 		if self.vision:
+ 			self.train_net.load("../saved_models/dqn_cnn")
+ 		else:
+ 			self.train_net.load("../saved_models/dqn_mlp")
+
 
 sess = tf.Session()
 o = 3
