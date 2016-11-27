@@ -36,8 +36,12 @@ class DQAgent(RLAgent):
 		self.replay_buffer = SimpleBuffer(self.buffer_size)
 		self.clip_rewards = clip_rewards
 		self.vision = vision
-		# self.exploration_strategy = EpsilonGreedy(...)
+		self.max_epsilon = 1
+		self.min_epsilon = 0.1
+		self.min_epsilon_timestep = 1000000
+		self.exploration_strategy = EpsilonGreedy(self.max_epsilon,self.min_epsilon,self.min_epsilon_timestep,self.num_actions)
 		# self.sess = tf.session()
+		
 		self.network = DQNetwork(env.num_actions,\
 								env.observation_length,\
 								self.discount_factor,\
@@ -50,22 +54,28 @@ class DQAgent(RLAgent):
 								self.vision)
 
 	def learn(self):
-		t = 0
+		timestep = 0
 		curr_state = self.env.reset() #Get the initial state
-		while t < self.max_training_steps:
-			if t%self.steps_per_epoch == 0:
+		while timestep < self.max_training_steps:
+			action = 0
+			if timestep%self.steps_per_epoch == 0:
 				print("Epoch Done")
 				#Print out stats here
+			#Initially just do random actions till you have enough frmaes to actually update
 			if self.replay_buffer.size() < self.batch_size:
-				#Initially just do random actions till you have enough frmaes to actually update
 				action = env.sample_action() #Or you could just keep epsilon as 1
+			#Otherwise follow the exploration strategy
 			else:
-				# action = #Get from DQN + epsilon greedy
-				# anneal epsilon here
+				best_action = self.network.get_best_action(curr_state)
+				action = self.exploration_strategy.get_action(timestep,best_action)
+
+			# Apply the action in the environment
 			next_state, reward, terminal, info = self.env.step(action)
-			#Clip the reward as it does in the DeepMind implementation
+			
+			#Clip the reward 
 			if self.clip_reward:
 				reward = self.clip_reward(reward, -1 , 1)
+
 			#Append the experience to replay buffer
 			self.replay_buffer.append(curr_state, action, reward, terminal, next_state)
 
@@ -73,19 +83,32 @@ class DQAgent(RLAgent):
 			if self.replay_buffer.size() >= self.batch_size:
 				#Sample a batch form experience buffer
 				#Calculate targets from the batch
+				
+				s_batch, a_batch, r_batch, t_batch, s2_batch = self.replay_buffer.sample_batch(self.batch_size)
+				
 				#While calculating targets if some state is terminal, then target must be R(s) and not 
 				# R(s) + gamma x Q*(s',a')
+				target_batch = r_batch
+				for term,s2,target in zip(t_batch,s2_batch,target_batch):
+					if not term:
+						q_vals = self.network.evaluate_values(s2)
+						max_q = np.max(q_vals)
+						lookahead = self.discount_factor * max_q
+						target+=lookahead
+
 				#Send the state batch and target batch to DQN
+				self.network.train(s_batch,target_batch)
+
 			if terminal:
 				#Begin a new episode if reached terminal episode
 				curr_state = self.env.reset()
 			else:
 				curr_state = next_state
 			#Don't forget to update the time counter!
-			t += 1
+			timestep += 1
 
-	def clip_reward(self, reward, lower, upper):
-		return np.clip(reward, lower, upper)
+	def clip_reward(self, reward):
+		return np.sign(reward)
 
 
 

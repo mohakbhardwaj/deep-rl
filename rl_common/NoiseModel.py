@@ -2,7 +2,7 @@
 """
 	Noise models for exploration noise in action selection
 	Created on: October 14, 2016
-	Author: Mohak Bhardwaj
+	Author: Mohak Bhardwaj, Shivam Gautam
 """
 import random
 import numpy as np
@@ -58,20 +58,34 @@ class OUNoiseModel(NoiseModel):
 
 	def state_propogate(self):
 		"""Propogate internal state using OU stochastic differential equation"""
-		dx = self.theta*(self.mean - self.state)*seld.dt + self.sigma*np.random.randn(len(self.state))
+		dx = self.theta*(self.mean - self.state)*self.dt + self.sigma*np.random.randn(len(self.state))
 		self.state = self.state + dx
 		return self.state
 
-	def noisy_action(self, action):
+	def get_action(self, action):
 		s = self.state_propogate()
 		action_p = np.clip(action + s, self.env_action_min, self.env_action_max)
 		return action_p
 	# def plot_model():
 
 class EpsilonGreedy(NoiseModel):
-	def __init__(self, )
+	def __init__(self, max_epsilon,min_epsilon,min_epsilon_frame,actions)
+		'''
+		@param actions : array containing possible action values eg. [1,4,7,-49]
+		'''
+		self.decay_rate = -(max_epsilon-min_epsilon)/min_epsilon_frame
+		self.decay_const = max_epsilon
+		self.actions = actions
+		
+	def get_action(self,timestep,best_action):
+		
+		epsilon = self.decay_rate*timestep + self.decay_const
 
+		random_num = np.random.random()
 
-#[TODO:] Implement Epsilon Greedy Noise Model
-
-
+		#If the random number generated is less than the current epsilon,
+		# Choose a random action
+		if random_num > epsilon:
+			return best_action
+		else:
+			return np.random.randint(0,len(self.actions)

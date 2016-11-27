@@ -73,11 +73,22 @@ class DQNetwork(ActionValueNetwork):
 		return train_net
 			
  	def train(self, state_batch, target_batch):
- 		self.train_net.fit(np.asarray(state_batch), np.asarray(target_batch), n_epoch = None, show_metric = True, batch_size = self.batch_size, snapshot_epoch = False)
+ 		self.train_net.fit(np.asarray(state_batch), np.asarray(target_batch),\
+ 		 n_epoch = None, show_metric = True, batch_size = self.batch_size, snapshot_epoch = False)
+
+ 	def get_best_action(self, state):
+
+ 		q_values = self.evaluate_values(state)
+ 		best_action = np.argmax(q_values)
+ 		return best_action
+
 
  	def evaluate_values(self, input):
  		if self.vision:
  			q_values = self.train_net.predict([tf.transpose(input, [0,2,3,1])])
+ 		else:
+ 			q_values = self.train_net.predict(input) ##Check implementation in tf
+
  		return q_values
 
  	def save_params(self):
