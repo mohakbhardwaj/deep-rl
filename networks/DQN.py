@@ -17,55 +17,48 @@ from ValueNetworks import ActionValueNetwork
 
 class DQNetwork(ActionValueNetwork):
 	def __init__(self ,\
-		sess ,\
-		observation_length ,\
-		action_max ,\
-		action_min ,\
-		action_length ,\
-		discount = 0.90 ,\
+		num_actions ,\
+		num_observations ,\
+		discount_factor = 0.90 ,\
 		learning_rate = 0.0001 ,\
-		tau = 0.001 ,\
+		num_epochs = 1 ,\
 		frameskip = 4 ,\
 		frameheight = 84 ,\
 		framewidth = 84,
 		vision = True):
-		self.sess = sess
-		self.observation_length = observation_length
-		self.action_max = action_max
-		self.action_min = action_min
-		self.action_length = action_length
-		self.discount = discount
+
+		self.num_actions = num_actions
+		self.num_observations = num_observations
+		#Learning parameters
+		self.discount_factor = discount
 		self.learning_rate = learning_rate
-		self.tau = tau
+		self.num_epochs = num_epochs
+		#Vision parameters
 		self.frameskip = frameskip
 		self.frameheight = frameheight
 		self.framewidth = framewidth
 		self.vision = vision
 
 		#Change for compatibility with non-CNN
-		self.state_input = tf.placeholder(tf.float32,\
-			 [None, self.frameskip, self.frameheight, self.framewidth])
-			
-		self.action_output = tf.placeholder(tf.float32,[None, self.action_length])
+		if vision:
+			self.state_input = tf.placeholder(tf.float32,\
+				 [None, self.frameskip, self.frameheight, self.framewidth])
 
-
-		self.hidden_fc = 512
-		self.model=self.create_network()
-		self.train_net =self.init_graph()
+		self.model = self.create_network()
+		self.train_net = self.init_graph()
 
 	def create_network(self):
 		"""Constructs and initializes core network architecture"""
-
 		if self.vision:
 			#Change state to correct dimensions --->Required by tfearn
-			net = tf.transpose(self.state_input, [0, 2, 3, 1]) 
+			state_input_transpose = tf.transpose(self.state_input, [0,2,3,1])
+			input_ = tflearn.input_data(shape = [None, self.frameskip, self,frameheight, self.framewidth])
 			net = tflearn.conv_2d(net, 32, 8, stride = 4, activation = 'relu')
 			net = tflearn.conv_2d(net, 64, 4, stride = 2, activation =  'relu')
 			net = tflearn.conv_2d(net, 64, 3, stride = 1, activation = 'relu')
 			net = tflearn.fully_connected(net, self.hidden_fc, activation = 'relu')
-			output = tflearn.fully_connected(net, self.action_length, activation = 'linear')
+			output = tflearn.fully_connected(net, self.num_actions activation = 'linear')
 			return output
-
 		else:
 			sys.stdout.println("Implement this first!")
 			raise NotImplementedError
@@ -73,21 +66,17 @@ class DQNetwork(ActionValueNetwork):
 	def init_graph(self):
 		"""Overall architecture including target network, 
 		gradient ops etc"""
-		adam = Adam(self.learning_rate, beta1=0.99)
-		d_net = regression(self.model,optimizer=adam,loss='l2')
-
-		train_net= DNN(d_net)
-
-		self.sess.run(tf.initialize_all_variables())
+		d_net = tflearn.regression(self.model, optimizer = 'adam', loss = 'mean_squared')
+		train_net = tflearn.DNN(d_net)
 		return train_net
 			
- 	def train(self, current_state_batch,target_batch):
- 		self.sess.run(self.train_net, feed_dict={
-            self.state_input:current_state_batch,
-            self.action_output:target_batch
-        })
+ 	def train(self, state_batch, target_batch):
+ 		self.train_net.fit(np.asarray(state_batch), np.asarray(target_batch), n_epoch = self.num_epochs, show_metric = True, snapshot_epoch = False)
 
-
+ 	def evaluate_values(self, input):
+ 		if self.vision:
+ 			q_values = self.train_net.predict([tf.transpose(input, [0,2,3,1])])
+ 		return q_values
 
 sess = tf.Session()
 o = 3
