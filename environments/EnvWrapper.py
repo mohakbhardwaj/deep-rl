@@ -35,7 +35,7 @@ class Env(object):
 		#The following commands are specific to gym environments,
 		#[TODO]change when different environments are also implemented
 		self.env = gym.make(env_name)
-		self.num_actions = range(self.env.action_space.n)
+		self.num_actions = self.env.action_space.n
 		self.state_buffer = deque()
 		self.observation_length =len(self.env.observation_space.high)
 

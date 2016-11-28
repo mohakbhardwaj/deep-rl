@@ -1,19 +1,27 @@
 #!/usr/bin/env python
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
-from RLAgent import RLAgent
+import gym
+
+sys.path.insert(0, os.path.abspath('../..'))
+
+from environments.EnvWrapper import Env
+from agents.DQAgent import DQAgent
+
+# from RLAgent import RLAgent
 
 # #Basic test
 # learner = RLLearners()
 # learner.learn()
 
 # Class definition test
-class DummyAgent(RLAgent):
+# class DummyAgent(RLAgent):
 
-	def learn(self):
-		print("Implemented")
-		return 0
+# 	def learn(self):
+# 		print("Implemented")
+# 		return 0
 
-agent = DummyAgent()
+env = Env('AirRaid-v0', 84, 110, 4, True)
+agent = DQAgent(env)
+
 agent.learn()

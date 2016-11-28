@@ -8,8 +8,10 @@ import random
 import numpy as np
 
 class NoiseModel(object):
-	def noisy_action(self, action):
-	"""Must be overriden by derived class"""
+	'''
+	Must be overriden by derived class
+	'''
+	def get_action(self, action):
 		raise NotImplementedError
 	# def plot_model():
 	# """Must be overriden by derived class"""
@@ -29,7 +31,7 @@ class GaussianNoiseModel(NoiseModel):
 		self.sigma_min = sigma_min
 		self.decay_rate = decay_rate
 	
-	def noisy_action(self, action, time):
+	def get_action(self, action, time):
 		"""Returns action perturbed by noise model with 
 		variance that decays with time"""
 		sigma = self.sigma_max - (self.sigma_max - self.sigma_min)*(max(1, t)/self.decay_rate)
@@ -69,7 +71,7 @@ class OUNoiseModel(NoiseModel):
 	# def plot_model():
 
 class EpsilonGreedy(NoiseModel):
-	def __init__(self, max_epsilon,min_epsilon,min_epsilon_frame,actions)
+	def __init__(self, max_epsilon,min_epsilon,min_epsilon_frame,actions):
 		'''
 		@param actions : array containing possible action values eg. [1,4,7,-49]
 		'''
@@ -88,4 +90,4 @@ class EpsilonGreedy(NoiseModel):
 		if random_num > epsilon:
 			return best_action
 		else:
-			return np.random.randint(0,len(self.actions)
+			return np.random.randint(0,len(self.actions))

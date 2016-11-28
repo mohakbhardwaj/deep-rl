@@ -39,13 +39,15 @@ class DQAgent(RLAgent):
 		self.max_epsilon = 1
 		self.min_epsilon = 0.1
 		self.min_epsilon_timestep = 1000000
+		self.num_actions =env.num_actions
 		self.exploration_strategy = EpsilonGreedy(self.max_epsilon,self.min_epsilon,self.min_epsilon_timestep,self.num_actions)
 		# self.sess = tf.session()
 		
-		self.network = DQNetwork(env.num_actions,\
+		self.network = DQNetwork(self.num_actions,\
 								env.observation_length,\
 								self.discount_factor,\
-								self.batch_size #Give the same batch size to NN so that tflearn regression does not impose additional batch_size
+								#Give the same batch size to NN so that tflearn regression does not impose additional batch_size
+								self.batch_size, \
 								self.learning_rate,\
 								1,\
 								self.env.history_length,\
@@ -63,7 +65,7 @@ class DQAgent(RLAgent):
 				#Print out stats here
 			#Initially just do random actions till you have enough frmaes to actually update
 			if self.replay_buffer.size() < self.batch_size:
-				action = env.sample_action() #Or you could just keep epsilon as 1
+				action = self.env.sample_action() #Or you could just keep epsilon as 1
 			#Otherwise follow the exploration strategy
 			else:
 				best_action = self.network.get_best_action(curr_state)
@@ -74,10 +76,10 @@ class DQAgent(RLAgent):
 			
 			#Clip the reward 
 			if self.clip_reward:
-				reward = self.clip_reward(reward, -1 , 1)
+				reward = self.clip_reward(reward)
 
 			#Append the experience to replay buffer
-			self.replay_buffer.append(curr_state, action, reward, terminal, next_state)
+			self.replay_buffer.add(curr_state, action, reward, terminal, next_state)
 
 			#Again check if training can be done
 			if self.replay_buffer.size() >= self.batch_size:
@@ -97,7 +99,7 @@ class DQAgent(RLAgent):
 						target+=lookahead
 
 				#Send the state batch and target batch to DQN
-				self.network.train(s_batch,target_batch)
+				self.network.train(s_batch,target_batch, action_batch)
 
 			if terminal:
 				#Begin a new episode if reached terminal episode
