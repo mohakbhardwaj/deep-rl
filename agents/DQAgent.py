@@ -5,12 +5,12 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-import tensorflow as tf
 from RLAgent import RLAgent
 from networks.DQN import DQNetwork
 from rl_common.ReplayBuffer import SimpleBuffer
 from rl_common.NoiseModel import *
 import gym
+import tensorflow as tf
 import numpy as np
 
 class DQAgent(RLAgent):
@@ -58,8 +58,12 @@ class DQAgent(RLAgent):
 	def learn(self):
 		timestep = 0
 		curr_state = self.env.reset() #Get the initial state
+		cumulative_reward=0
 		while timestep < self.max_training_steps:
+			print "Step: ",timestep
 			action = 0
+			# TODO FIX: Giving an error when rendering. 
+			# self.env.render()
 			if timestep%self.steps_per_epoch == 0:
 				print("Epoch Done")
 				#Print out stats here
@@ -70,14 +74,15 @@ class DQAgent(RLAgent):
 			else:
 				best_action = self.network.get_best_action(curr_state)
 				action = self.exploration_strategy.get_action(timestep,best_action)
+				# print action, best_action
 
 			# Apply the action in the environment
 			next_state, reward, terminal, info = self.env.step(action)
-			
+
 			#Clip the reward 
 			if self.clip_reward:
 				reward = self.clip_reward(reward)
-
+			cumulative_reward+=reward
 			#Append the experience to replay buffer
 			self.replay_buffer.add(curr_state, action, reward, terminal, next_state)
 
@@ -104,6 +109,8 @@ class DQAgent(RLAgent):
 			if terminal:
 				#Begin a new episode if reached terminal episode
 				curr_state = self.env.reset()
+				print "Reward: ",cumulative_reward
+				cumulative_reward=0
 			else:
 				curr_state = next_state
 			#Don't forget to update the time counter!
