@@ -51,6 +51,8 @@ class DQNetwork(ActionValueNetwork):
 		# self.model = self.create_network()
 		# self.train_net = self.init_graph()
 		self.graph_ops = self.init_graph()
+		self.init = tf.initialize_all_variables()
+		self.sess.run(self.init)
 
 	def create_network(self):
 		"""Constructs and initializes core network architecture"""
@@ -87,18 +89,21 @@ class DQNetwork(ActionValueNetwork):
 		train_net = optimizer.minimize(cost, var_list=network_params)
 		graph_operations = {"s": state_input,\
 							"q_value_output": q_value_output,\
-							"action_input": action_input
-							"target_input": target_input
+							"action_input": action_input,\
+							"target_input": target_input,\
 							"train_net": train_net}
 		return graph_operations
 
  	def train(self, state_batch, target_batch, action_batch):
 		action_vectors = self.to_action_input(action_batch)
- 		self.train_net.fit([np.transpose(state_batch, [0,2,3,1]), action_vectors], np.asarray(target_batch),\
- 		 n_epoch = 1, show_metric = True, batch_size = self.batch_size, snapshot_epoch = False)
+ 		# self.train_net.fit([np.transpose(state_batch, [0,2,3,1]), action_vectors], np.asarray(target_batch),\
+ 		 # n_epoch = 1, show_metric = True, batch_size = self.batch_size, snapshot_epoch = False)
+		state_input = self.graph_ops["s"]
+		target_input = self.graph_ops["target_input"]
+		action_input = self.graph_ops["action_input"]
+		self.sess.run(self.graph_ops['train_net'], feed_dict={state_input: state_batch, action_input:action_vectors, target_input:target_batch})
 
  	def get_best_action(self, state):
-
  		q_values = self.evaluate_values(state)
  		best_action = np.argmax(q_values)
  		return best_action
@@ -113,15 +118,8 @@ class DQNetwork(ActionValueNetwork):
 
 
  	def evaluate_values(self, input):
- 		if self.vision:
-			# n_dim_input = np.expand_dims(input, axis=0)
-			n_dim_input = np.reshape(input,[-1,input.shape[0],input.shape[1],input.shape[2]])
-			# n_dim_concat = np.concatenate([n_dim_input,n_dim_input])
-			q_values = self.train_net.predict([np.asarray(np.transpose(n_dim_input, [0,2,3,1]))])
-
- 		else:
- 			q_values = self.train_net.predict(input) ##Check implementation in tf
-
+ 		state_input = self.graph_ops["s"]
+		q_values= self.graph_ops['q_value_output'].eval(session = self.sess, feed_dict={state_input:[input]})
  		return q_values
 
  	def save_params(self):

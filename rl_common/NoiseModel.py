@@ -71,7 +71,7 @@ class OUNoiseModel(NoiseModel):
 	# def plot_model():
 
 class EpsilonGreedy(NoiseModel):
-	def __init__(self, max_epsilon,min_epsilon,min_epsilon_frame,actions):
+	def __init__(self, max_epsilon,min_epsilon,min_epsilon_frame, actions):
 		'''
 		@param actions : array containing possible action values eg. [1,4,7,-49]
 		'''
@@ -90,4 +90,4 @@ class EpsilonGreedy(NoiseModel):
 		if random_num > epsilon:
 			return best_action
 		else:
-			return np.random.randint(0,len(self.actions))
+			return np.random.randint(0, self.actions)

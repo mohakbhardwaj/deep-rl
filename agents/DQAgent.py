@@ -91,7 +91,7 @@ class DQAgent(RLAgent):
 				#While calculating targets if some state is terminal, then target must be R(s) and not 
 				# R(s) + gamma x Q*(s',a')
 				target_batch = r_batch
-				for term,s2,target in zip(t_batch,s2_batch,target_batch):
+				for term,s2,target,action in zip(t_batch,s2_batch,target_batch,a_batch):
 					if not term:
 						q_vals = self.network.evaluate_values(s2)
 						max_q = np.max(q_vals)
@@ -99,7 +99,7 @@ class DQAgent(RLAgent):
 						target+=lookahead
 
 				#Send the state batch and target batch to DQN
-				self.network.train(s_batch,target_batch, action_batch)
+				self.network.train(s_batch, target_batch, a_batch)
 
 			if terminal:
 				#Begin a new episode if reached terminal episode
