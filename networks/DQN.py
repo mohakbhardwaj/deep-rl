@@ -51,8 +51,14 @@ class DQNetwork(ActionValueNetwork):
 		# self.model = self.create_network()
 		# self.train_net = self.init_graph()
 		self.graph_ops = self.init_graph()
-		self.init = tf.initialize_all_variables()
-		self.sess.run(self.init)
+		# Add an op to initialize the variables.
+		self.init_op = tf.initialize_all_variables()
+		self.sess.run(self.init_op)
+
+		# Add ops to save and restore all the variables.
+		self.saver = tf.train.Saver()
+		print("Deep Q Network created and initialized")
+
 
 	def create_network(self):
 		"""Constructs and initializes core network architecture"""
@@ -87,11 +93,14 @@ class DQNetwork(ActionValueNetwork):
 		optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
 		# train_net = tflearn.DNN(d_net)
 		train_net = optimizer.minimize(cost, var_list=network_params)
+		init = tf.initialize_all_variables()
+		saver = tf.train.Saver()
 		graph_operations = {"s": state_input,\
 							"q_value_output": q_value_output,\
 							"action_input": action_input,\
 							"target_input": target_input,\
-							"train_net": train_net}
+							"train_net": train_net,\
+							"network_params": network_params}
 		return graph_operations
 
  	def train(self, state_batch, target_batch, action_batch):
@@ -122,18 +131,13 @@ class DQNetwork(ActionValueNetwork):
 		q_values= self.graph_ops['q_value_output'].eval(session = self.sess, feed_dict={state_input:[input]})
  		return q_values
 
- 	def save_params(self):
- 		if self.vision:
- 			self.train_net.save("../saved_models/dqn_cnn")
- 		else:
- 			self.train_net.save("../saved_models/dqn_mlp")
+ 	def save_params(self, file_name):
+		save_path = self.saver.save(self.sess, "../../saved_models/dqn/" + file_name + ".ckpt")
+		print("Model saved in file: %s" % save_path)
 
- 	def load_params(self):
- 		if self.vision:
- 			self.train_net.load("../saved_models/dqn_cnn")
- 		else:
- 			self.train_net.load("../saved_models/dqn_mlp")
-
+ 	def load_params(self, file_name):
+		self.saver.restore(self.sess, "../../saved_models/dqn/" + file_name + ".ckpt")
+		print("Model restored.")
 
 
 # sess = tf.Session()

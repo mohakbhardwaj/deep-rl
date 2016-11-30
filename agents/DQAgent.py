@@ -23,6 +23,11 @@ class DQAgent(RLAgent):
 				 buffer_size = 1000000,\
 				 batch_size = 32,\
 				 clip_rewards = True,\
+				 save_after_episodes = 3,\
+				 training_params_file = "dqn_atari",\
+				 max_epsilon = 1,\
+				 min_epsilon = 0.1,\
+				 min_epsilon_timestep = 1000000 ,\
 				 vision = True):
 		
 		#Learning parameters
@@ -35,10 +40,12 @@ class DQAgent(RLAgent):
 		self.batch_size = batch_size
 		self.replay_buffer = SimpleBuffer(self.buffer_size)
 		self.clip_rewards = clip_rewards
+		self.save_after_episodes = save_after_episodes
+		self.training_params_file = training_params_file
 		self.vision = vision
-		self.max_epsilon = 1
-		self.min_epsilon = 0.1
-		self.min_epsilon_timestep = 1000000
+		self.max_epsilon = max_epsilon
+		self.min_epsilon = min_epsilon
+		self.min_epsilon_timestep = min_epsilon_timestep
 		self.num_actions =env.num_actions
 		self.exploration_strategy = EpsilonGreedy(self.max_epsilon,self.min_epsilon,self.min_epsilon_timestep,self.num_actions)
 		# self.sess = tf.session()
@@ -64,6 +71,7 @@ class DQAgent(RLAgent):
 		episode_length = 0
 		unclipped_episode_reward = 0
 		unclipped_average_reward = 0
+		print("Initiate Training")
 		while timestep < self.max_training_steps:
 			# print "Step: ",timestep
 			action = 0
@@ -112,7 +120,7 @@ class DQAgent(RLAgent):
 
 				#Send the state batch and target batch to DQN
 				self.network.train(s_batch, target_batch, a_batch)
-				
+
 			if terminal:
 				#Begin a new episode if reached terminal episode
 				curr_state = self.env.reset()
@@ -122,31 +130,28 @@ class DQAgent(RLAgent):
 				unclipped_average_reward += (unclipped_episode_reward - unclipped_average_reward)/num_episodes_passed
 				avg_reward += (cumulative_reward - avg_reward)/num_episodes_passed
 				# print("[INFO], "Number",)  "Cumulative Episode Reward: ",cumulative_reward
+				
 				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
 				  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
 				  unclipped_average_reward)
+				
+				#If num_episodes_passed%save_after_episodes is zero, save the  current learned weights
+				if (num_episodes_passed + 1)%self.save_after_episodes == 0:
+					print("Saving currently learned weights")
+					self.network.save_params(self.training_params_file)
+				#Reset episode statistics				
 				cumulative_reward = 0
 				unclipped_episode_reward = 0
-				episode_length = 0
+				episode_length = 0		
 			else:
 				curr_state = next_state
 			#Don't forget to update the time counter!
 			timestep += 1
 			episode_length += 1
+		
+		#Save final model weights after traning complete
+		print("Training Done. Saving final model weights")
+		self.network.save_params(self.training_params_file)
 
 	def clip_reward(self, reward):
 		return np.sign(reward)
-
-
-
-
-
-
-
-
-
-#[TODO:] Implement Epsilon Greedy Noise Model
-#[TODO]
-# env = gym.make('CartPole-v0')
-# Agent = DDPGAgent(env)
-# Agent.learn()
