@@ -58,13 +58,19 @@ class DQAgent(RLAgent):
 	def learn(self):
 		timestep = 0
 		curr_state = self.env.reset() #Get the initial state
-		cumulative_reward=0
+		cumulative_reward = 0 #Cumulative rewards in one episode
+		avg_reward = 0 #Average reward per episode
+		num_episodes_passed = 0
+		episode_length = 0
+		unclipped_episode_reward = 0
+		unclipped_average_reward = 0
 		while timestep < self.max_training_steps:
-			print "Step: ",timestep
+			# print "Step: ",timestep
 			action = 0
 			# TODO FIX: Giving an error when rendering. 
 			# self.env.render()
-			if timestep%self.steps_per_epoch == 0:
+			if (timestep+1)%self.steps_per_epoch == 0:
+				
 				print("Epoch Done")
 				#Print out stats here
 			#Initially just do random actions till you have enough frmaes to actually update
@@ -74,15 +80,18 @@ class DQAgent(RLAgent):
 			else:
 				best_action = self.network.get_best_action(curr_state)
 				action = self.exploration_strategy.get_action(timestep,best_action)
-				# print action, best_action
+				# print action, best_action, self.exploration_strategy.epsilon
+				if timestep == self.min_epsilon_timestep:
+					print self.exploration_strategy.epsilon, min_epsilon
 
 			# Apply the action in the environment
 			next_state, reward, terminal, info = self.env.step(action)
-
+			unclipped_episode_reward += reward
 			#Clip the reward 
 			if self.clip_reward:
 				reward = self.clip_reward(reward)
-			cumulative_reward+=reward
+			
+			cumulative_reward += reward
 			#Append the experience to replay buffer
 			self.replay_buffer.add(curr_state, action, reward, terminal, next_state)
 
@@ -90,9 +99,7 @@ class DQAgent(RLAgent):
 			if self.replay_buffer.size() >= self.batch_size:
 				#Sample a batch form experience buffer
 				#Calculate targets from the batch
-				
-				s_batch, a_batch, r_batch, t_batch, s2_batch = self.replay_buffer.sample_batch(self.batch_size)
-				
+				s_batch, a_batch, r_batch, t_batch, s2_batch = self.replay_buffer.sample_batch(self.batch_size)	
 				#While calculating targets if some state is terminal, then target must be R(s) and not 
 				# R(s) + gamma x Q*(s',a')
 				target_batch = r_batch
@@ -105,16 +112,27 @@ class DQAgent(RLAgent):
 
 				#Send the state batch and target batch to DQN
 				self.network.train(s_batch, target_batch, a_batch)
-
+				
 			if terminal:
 				#Begin a new episode if reached terminal episode
 				curr_state = self.env.reset()
-				print "Reward: ",cumulative_reward
-				cumulative_reward=0
+				#Update the average reward
+				num_episodes_passed += 1
+				# avg_reward = (avg_reward*(num_episodes_passed - 1) + cumulative_reward)/num_episodes_passed
+				unclipped_average_reward += (unclipped_episode_reward - unclipped_average_reward)/num_episodes_passed
+				avg_reward += (cumulative_reward - avg_reward)/num_episodes_passed
+				# print("[INFO], "Number",)  "Cumulative Episode Reward: ",cumulative_reward
+				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
+				  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
+				  unclipped_average_reward)
+				cumulative_reward = 0
+				unclipped_episode_reward = 0
+				episode_length = 0
 			else:
 				curr_state = next_state
 			#Don't forget to update the time counter!
 			timestep += 1
+			episode_length += 1
 
 	def clip_reward(self, reward):
 		return np.sign(reward)

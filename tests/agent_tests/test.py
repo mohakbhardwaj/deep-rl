@@ -21,7 +21,7 @@ from agents.DQAgent import DQAgent
 # 		print("Implemented")
 # 		return 0
 
-env = Env('AirRaid-v0', 84, 110, 4, True)
+env = Env('Breakout-v0', 84, 110, 4, True)
 agent = DQAgent(env)
 
 agent.learn()

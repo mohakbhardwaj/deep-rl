@@ -78,16 +78,17 @@ class EpsilonGreedy(NoiseModel):
 		self.decay_rate = -(max_epsilon-min_epsilon)/min_epsilon_frame
 		self.decay_const = max_epsilon
 		self.actions = actions
+		self.epsilon = max_epsilon
 		
 	def get_action(self,timestep,best_action):
 		
-		epsilon = self.decay_rate*timestep + self.decay_const
+		self.epsilon = self.decay_rate*timestep + self.decay_const
 
 		random_num = np.random.random()
 
 		#If the random number generated is less than the current epsilon,
 		# Choose a random action
-		if random_num > epsilon:
+		if random_num > self.epsilon:
 			return best_action
 		else:
 			return np.random.randint(0, self.actions)
