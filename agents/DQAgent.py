@@ -88,6 +88,14 @@ class DQAgent(RLAgent):
 		unclipped_episode_reward = 0
 		unclipped_average_reward = 0
 		print("Initiate Training")
+		# Load params from a saved model
+		
+		print("Loading parameters")
+
+		try:
+			self.network.load_params(self.training_params_file)
+		except:
+			print("LOADING FAILED!")
 		while timestep < self.max_training_steps:
 			# print "Step: ",timestep
 			action = 0
@@ -151,6 +159,8 @@ class DQAgent(RLAgent):
 				avg_reward += (cumulative_reward - avg_reward)/num_episodes_passed
 				# print("[INFO], "Number",)  "Cumulative Episode Reward: ",cumulative_reward
 				
+				log_info= [num_episodes_passed, cumulative_reward, episode_length, avg_reward, unclipped_episode_reward,unclipped_average_reward]
+				self.save_log_to_csv(log_info)
 
 				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
 				  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
@@ -169,8 +179,7 @@ class DQAgent(RLAgent):
 				curr_state = next_state
 			#Don't forget to update the time counter!
 
-			log_info= [num_episodes_passed, cumulative_reward, episode_length, avg_reward, unclipped_episode_reward,unclipped_average_reward]
-			self.save_log_to_csv(log_info)
+			
 			timestep += 1
 			episode_length += 1
 
