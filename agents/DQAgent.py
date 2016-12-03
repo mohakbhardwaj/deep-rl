@@ -139,8 +139,7 @@ class DQAgent(RLAgent):
 				self.network.train(s_batch, target_batch, a_batch)
 
 			#Save data for the current episode to csv
-			log_info= [num_episodes_passed, cumulative_reward, episode_length, avg_reward, unclipped_episode_reward,unclipped_average_reward]
-			self.save_log_to_csv(log_info)
+			
 
 			if terminal:
 				#Begin a new episode if reached terminal episode
@@ -169,6 +168,9 @@ class DQAgent(RLAgent):
 			else:
 				curr_state = next_state
 			#Don't forget to update the time counter!
+
+			log_info= [num_episodes_passed, cumulative_reward, episode_length, avg_reward, unclipped_episode_reward,unclipped_average_reward]
+			self.save_log_to_csv(log_info)
 			timestep += 1
 			episode_length += 1
 
