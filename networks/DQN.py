@@ -137,7 +137,7 @@ class DQNetwork(ActionValueNetwork):
 
  	def load_params(self, file_name):
 		self.saver.restore(self.sess, "../../saved_models/dqn/" + file_name + ".ckpt")
-		print("Model restored.")
+		print("Weights loaded from file ../../saved_models/dqn/" + file_name + ".ckpt")
 
 
 # sess = tf.Session()

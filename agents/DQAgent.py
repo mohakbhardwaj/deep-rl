@@ -94,6 +94,7 @@ class DQAgent(RLAgent):
 
 		try:
 			self.network.load_params(self.training_params_file)
+			print("Weights Loaded")
 		except:
 			print("LOADING FAILED!")
 		while timestep < self.max_training_steps:
@@ -147,8 +148,6 @@ class DQAgent(RLAgent):
 				self.network.train(s_batch, target_batch, a_batch)
 
 			#Save data for the current episode to csv
-			
-
 			if terminal:
 				#Begin a new episode if reached terminal episode
 				curr_state = self.env.reset()
