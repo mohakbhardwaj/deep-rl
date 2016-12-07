@@ -50,9 +50,10 @@ class DQNetwork(ActionValueNetwork):
 
 		# self.model = self.create_network()
 		# self.train_net = self.init_graph()
-		self.graph_ops = self.init_graph()
+		with tf.device('/gpu:0'):
+			self.graph_ops = self.init_graph()
 		# Add an op to initialize the variables.
-		self.init_op = tf.initialize_all_variables()
+			self.init_op = tf.initialize_all_variables()
 		self.sess.run(self.init_op)
 
 		# Add ops to save and restore all the variables.
@@ -137,7 +138,7 @@ class DQNetwork(ActionValueNetwork):
 
  	def load_params(self, file_name):
 		self.saver.restore(self.sess, "../../saved_models/dqn/" + file_name + ".ckpt")
-		print("Model restored.")
+		print("Weights loaded from file ../../saved_models/dqn/" + file_name + ".ckpt")
 
 
 # sess = tf.Session()

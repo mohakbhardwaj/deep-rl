@@ -12,6 +12,7 @@ from rl_common.NoiseModel import *
 import gym
 import tensorflow as tf
 import numpy as np
+import csv
 
 class DQAgent(RLAgent):
 	def __init__(self,\
@@ -47,6 +48,8 @@ class DQAgent(RLAgent):
 		self.min_epsilon = min_epsilon
 		self.min_epsilon_timestep = min_epsilon_timestep
 		self.num_actions =env.num_actions
+		self.agent_log_writer = csv.writer(open('agent_log.csv','w+'))
+
 		self.exploration_strategy = EpsilonGreedy(self.max_epsilon,self.min_epsilon,self.min_epsilon_timestep,self.num_actions)
 		# self.sess = tf.session()
 		
@@ -62,6 +65,19 @@ class DQAgent(RLAgent):
 								self.env.w_out,\
 								self.vision)
 
+		self.print_csv_header()
+
+	def print_csv_header(self):
+		log_info= ['num_episodes_passed', 'cumulative_reward', 'episode_length',\
+		 'avg_reward', 'unclipped_episode_reward','unclipped_average_reward']
+		self.save_log_to_csv(log_info)
+
+	def save_log_to_csv(self,log):
+		row = []
+		for log_elt in log:
+			row.append(log_elt) 
+		self.agent_log_writer.writerow(row)
+
 	def learn(self):
 		timestep = 0
 		curr_state = self.env.reset() #Get the initial state
@@ -72,6 +88,15 @@ class DQAgent(RLAgent):
 		unclipped_episode_reward = 0
 		unclipped_average_reward = 0
 		print("Initiate Training")
+		# Load params from a saved model
+		
+		print("Loading parameters")
+
+		try:
+			self.network.load_params(self.training_params_file)
+			print("Weights Loaded")
+		except:
+			print("LOADING FAILED!")
 		while timestep < self.max_training_steps:
 			# print "Step: ",timestep
 			action = 0
@@ -95,6 +120,7 @@ class DQAgent(RLAgent):
 			# Apply the action in the environment
 			next_state, reward, terminal, info = self.env.step(action)
 			unclipped_episode_reward += reward
+
 			#Clip the reward 
 			if self.clip_reward:
 				reward = self.clip_reward(reward)
@@ -121,6 +147,7 @@ class DQAgent(RLAgent):
 				#Send the state batch and target batch to DQN
 				self.network.train(s_batch, target_batch, a_batch)
 
+			#Save data for the current episode to csv
 			if terminal:
 				#Begin a new episode if reached terminal episode
 				curr_state = self.env.reset()
@@ -131,10 +158,14 @@ class DQAgent(RLAgent):
 				avg_reward += (cumulative_reward - avg_reward)/num_episodes_passed
 				# print("[INFO], "Number",)  "Cumulative Episode Reward: ",cumulative_reward
 				
+				log_info= [num_episodes_passed, cumulative_reward, episode_length, avg_reward, unclipped_episode_reward,unclipped_average_reward]
+				self.save_log_to_csv(log_info)
+
 				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
 				  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
 				  unclipped_average_reward)
-				
+
+					
 				#If num_episodes_passed%save_after_episodes is zero, save the  current learned weights
 				if (num_episodes_passed + 1)%self.save_after_episodes == 0:
 					print("Saving currently learned weights")
@@ -146,8 +177,11 @@ class DQAgent(RLAgent):
 			else:
 				curr_state = next_state
 			#Don't forget to update the time counter!
+
+			
 			timestep += 1
 			episode_length += 1
+
 		
 		#Save final model weights after traning complete
 		print("Training Done. Saving final model weights")

@@ -21,7 +21,11 @@ from agents.DQAgent import DQAgent
 # 		print("Implemented")
 # 		return 0
 
+
 env = Env('Breakout-v0', 84, 110, 4, True)
+# env.monitor.start('../env_monitor/dqn-experiment-1')
 agent = DQAgent(env)
 
 agent.learn()
+
+# env.monitor.close()
