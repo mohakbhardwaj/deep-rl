@@ -14,7 +14,8 @@ import tensorflow as tf
 import tflearn
 import numpy as np
 from ValueNetworks import ActionValueNetwork
-
+#Activate INFO logs during training
+tf.logging.set_verbosity(tf.logging.INFO)
 class DQNetwork(ActionValueNetwork):
 	def __init__(self ,\
 		num_actions ,\
@@ -50,7 +51,7 @@ class DQNetwork(ActionValueNetwork):
 
 		# self.model = self.create_network()
 		# self.train_net = self.init_graph()
-		with tf.device('/gpu:0'):
+		with tf.device('/cpu:0'):
 			self.graph_ops = self.init_graph()
 		# Add an op to initialize the variables.
 			self.init_op = tf.initialize_all_variables()
@@ -111,6 +112,7 @@ class DQNetwork(ActionValueNetwork):
 		state_input = self.graph_ops["s"]
 		target_input = self.graph_ops["target_input"]
 		action_input = self.graph_ops["action_input"]
+		print "Training"
 		self.sess.run(self.graph_ops['train_net'], feed_dict={state_input: state_batch, action_input:action_vectors, target_input:target_batch})
 
  	def get_best_action(self, state):
