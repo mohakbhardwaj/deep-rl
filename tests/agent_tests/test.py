@@ -22,10 +22,24 @@ from agents.DQAgent import DQAgent
 # 		return 0
 
 
-env = Env('Breakout-v0', 84, 110, 4, True)
-# env.monitor.start('../env_monitor/dqn-experiment-1')
-agent = DQAgent(env)
+env = Env('CartPole-v0', 84, 110, 4, False)
+env.start_monitor('../env_monitor/dqn-experiment-1')
+agent = DQAgent( env,\
+				 discount_factor = 0.90 ,\
+				 learning_rate = 0.001,\
+				 max_training_steps = 100000,\
+				 steps_per_epoch = 1000,\
+				 buffer_size = 10000,\
+				 batch_size = 32,\
+				 clip_rewards = False,\
+				 save_after_episodes = 3,\
+				 training_params_file = "dqn_cartpole",\
+				 max_epsilon = 1,\
+				 min_epsilon = 0.1,\
+				 min_epsilon_timestep = 5000,\
+				 vision = False ,\
+				 warm_start = False)
 
 agent.learn()
 
-# env.monitor.close()
+env.close_monitor()

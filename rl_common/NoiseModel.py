@@ -71,7 +71,7 @@ class OUNoiseModel(NoiseModel):
 	# def plot_model():
 
 class EpsilonGreedy(NoiseModel):
-	def __init__(self, max_epsilon,min_epsilon,min_epsilon_frame, actions):
+	def __init__(self, max_epsilon, min_epsilon, min_epsilon_frame, actions):
 		'''
 		@param actions : array containing possible action values eg. [1,4,7,-49]
 		'''
@@ -79,10 +79,11 @@ class EpsilonGreedy(NoiseModel):
 		self.decay_const = max_epsilon
 		self.actions = actions
 		self.epsilon = max_epsilon
+		self.min_epsilon = min_epsilon
 		
 	def get_action(self,timestep,best_action):
 		
-		self.epsilon = self.decay_rate*timestep + self.decay_const
+		self.epsilon = max(self.decay_rate*timestep + self.decay_const, self.min_epsilon)
 
 		random_num = np.random.random()
 

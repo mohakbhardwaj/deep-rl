@@ -1,2 +1,2 @@
-model_checkpoint_path: "dqn_atari.ckpt"
-all_model_checkpoint_paths: "dqn_atari.ckpt"
+model_checkpoint_path: "dqn_cartpole.ckpt"
+all_model_checkpoint_paths: "dqn_cartpole.ckpt"

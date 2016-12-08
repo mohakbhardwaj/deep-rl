@@ -29,7 +29,8 @@ class DQAgent(RLAgent):
 				 max_epsilon = 1,\
 				 min_epsilon = 0.1,\
 				 min_epsilon_timestep = 1000000 ,\
-				 vision = True):
+				 vision = True ,\
+				 warm_start = True):
 		
 		#Learning parameters
 		self.env = env
@@ -44,11 +45,12 @@ class DQAgent(RLAgent):
 		self.save_after_episodes = save_after_episodes
 		self.training_params_file = training_params_file
 		self.vision = vision
+		self.warm_start = warm_start
 		self.max_epsilon = max_epsilon
 		self.min_epsilon = min_epsilon
 		self.min_epsilon_timestep = min_epsilon_timestep
 		self.num_actions =env.num_actions
-		self.agent_log_writer = csv.writer(open('agent_log.csv','w+'))
+		self.agent_log_writer = csv.writer(open('agent_log_2.csv','w+'))
 
 		self.exploration_strategy = EpsilonGreedy(self.max_epsilon,self.min_epsilon,self.min_epsilon_timestep,self.num_actions)
 		# self.sess = tf.session()
@@ -90,20 +92,20 @@ class DQAgent(RLAgent):
 		print("Initiate Training")
 		# Load params from a saved model
 		
-		print("Loading parameters")
+		if self.warm_start:
+			print("Loading parameters")
 
-		try:
-			self.network.load_params(self.training_params_file)
-			print("Weights Loaded")
-		except:
-			print("LOADING FAILED!")
+			try:
+				self.network.load_params(self.training_params_file)
+				print("Weights Loaded")
+			except:
+				print("LOADING FAILED!")
 		while timestep < self.max_training_steps:
 			# print "Step: ",timestep
 			action = 0
 			# TODO FIX: Giving an error when rendering. 
-			# self.env.render()
+			self.env.render()
 			if (timestep+1)%self.steps_per_epoch == 0:
-				
 				print("Epoch Done")
 				#Print out stats here
 			#Initially just do random actions till you have enough frmaes to actually update
@@ -115,10 +117,11 @@ class DQAgent(RLAgent):
 				action = self.exploration_strategy.get_action(timestep,best_action)
 				# print action, best_action, self.exploration_strategy.epsilon
 				if timestep == self.min_epsilon_timestep:
-					print self.exploration_strategy.epsilon, min_epsilon
+					print self.exploration_strategy.epsilon, self.min_epsilon
 
 			# Apply the action in the environment
 			next_state, reward, terminal, info = self.env.step(action)
+			
 			unclipped_episode_reward += reward
 
 			#Clip the reward 
@@ -136,13 +139,17 @@ class DQAgent(RLAgent):
 				s_batch, a_batch, r_batch, t_batch, s2_batch = self.replay_buffer.sample_batch(self.batch_size)	
 				#While calculating targets if some state is terminal, then target must be R(s) and not 
 				# R(s) + gamma x Q*(s',a')
+				
 				target_batch = r_batch
-				for term,s2,target,action in zip(t_batch,s2_batch,target_batch,a_batch):
+				for idx, (term,s2,target) in enumerate(zip(t_batch,s2_batch,target_batch)):
+					lookahead = 0
 					if not term:
 						q_vals = self.network.evaluate_values(s2)
 						max_q = np.max(q_vals)
+						# print q_vals
 						lookahead = self.discount_factor * max_q
-						target+=lookahead
+						# target+=lookahead
+					target_batch[idx] += lookahead 
 
 				#Send the state batch and target batch to DQN
 				self.network.train(s_batch, target_batch, a_batch)
@@ -163,7 +170,8 @@ class DQAgent(RLAgent):
 
 				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
 				  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
-				  unclipped_average_reward)
+				  unclipped_average_reward, "Curr Epsilon: ", self.exploration_strategy.epsilon, "Steps passed: ", timestep)
+
 
 					
 				#If num_episodes_passed%save_after_episodes is zero, save the  current learned weights

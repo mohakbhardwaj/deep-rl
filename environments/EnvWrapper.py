@@ -75,19 +75,26 @@ class Env(object):
 		previous_frames = np.array(self.state_buffer)
 		
 		if len(previous_frames.shape) < 3:
-			previous_frames = previous_frames.reshape(previous_frames.shape[0], 1, previous_frames.shape[1])
+			previous_frames = previous_frames.reshape(previous_frames.shape[0], previous_frames.shape[1])
 		# print observation
 		s=np.array([])
 		if self.vision:
 			s = np.empty((self.history_length, self.h_out, self.w_out))
 		else:
-			s= np.empty((self.history_length,self.observation_length,self.observation_length)) 
+			s= np.empty((self.history_length, self.observation_length)) 
 		s[:self.history_length, ...] = previous_frames
 		s[self.history_length-1] = observation
 		#Update the state_buffer
 		self.state_buffer.popleft()
 		self.state_buffer.append(observation)
 		return s, reward, done, info
+	
+	def start_monitor(self, location, force = True):
+		self.env.monitor.start(location, force = force)
+
+	def close_monitor(self):
+		self.env.monitor.close()
+
 
 		
 

@@ -78,9 +78,11 @@ class DQNetwork(ActionValueNetwork):
 			output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
 			return state_input, output
 		else:
-			sys.stdout.println("Implement this first!")
-			raise NotImplementedError
-
+			state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.num_observations])
+			net = tflearn.fully_connected(state_input, 30, activation = 'relu')
+			net = tflearn.fully_connected(net, 20, activation = 'relu')
+			output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
+			return state_input, output
 	def init_graph(self):
 		"""Overall architecture including target network,
 		gradient ops etc"""
@@ -112,7 +114,6 @@ class DQNetwork(ActionValueNetwork):
 		state_input = self.graph_ops["s"]
 		target_input = self.graph_ops["target_input"]
 		action_input = self.graph_ops["action_input"]
-		print "Training"
 		self.sess.run(self.graph_ops['train_net'], feed_dict={state_input: state_batch, action_input:action_vectors, target_input:target_batch})
 
  	def get_best_action(self, state):
