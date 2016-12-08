@@ -21,14 +21,14 @@ class DQAgent(RLAgent):
 				 learning_rate = 0.0001,\
 				 max_training_steps = 10000000,\
 				 steps_per_epoch = 6000,\
-				 buffer_size = 1000000,\
+				 buffer_size = 40000,\
 				 batch_size = 32,\
 				 clip_rewards = True,\
 				 save_after_episodes = 3,\
 				 training_params_file = "dqn_atari",\
 				 max_epsilon = 1,\
 				 min_epsilon = 0.1,\
-				 min_epsilon_timestep = 1000000 ,\
+				 min_epsilon_timestep = 400000 ,\
 				 vision = True ,\
 				 warm_start = True):
 		
@@ -50,7 +50,7 @@ class DQAgent(RLAgent):
 		self.min_epsilon = min_epsilon
 		self.min_epsilon_timestep = min_epsilon_timestep
 		self.num_actions =env.num_actions
-		self.agent_log_writer = csv.writer(open('agent_log_2.csv','w+'))
+		self.agent_log_writer = csv.writer(open('agent_log_atari.csv','w+'))
 
 		self.exploration_strategy = EpsilonGreedy(self.max_epsilon,self.min_epsilon,self.min_epsilon_timestep,self.num_actions)
 		# self.sess = tf.session()
@@ -104,7 +104,7 @@ class DQAgent(RLAgent):
 			# print "Step: ",timestep
 			action = 0
 			# TODO FIX: Giving an error when rendering. 
-			self.env.render()
+			#self.env.render()
 			if (timestep+1)%self.steps_per_epoch == 0:
 				print("Epoch Done")
 				#Print out stats here

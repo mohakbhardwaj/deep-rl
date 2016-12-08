@@ -43,7 +43,7 @@ class DQNetwork(ActionValueNetwork):
 		self.vision = vision
 
 		self.hidden_fc = 512
-		self.sess = tf.Session()
+		self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 
 		#Change for compatibility with non-CNN
 		# if self.vision:
@@ -51,14 +51,15 @@ class DQNetwork(ActionValueNetwork):
 
 		# self.model = self.create_network()
 		# self.train_net = self.init_graph()
-		with tf.device('/cpu:0'):
+		with tf.device('/gpu:0'):
 			self.graph_ops = self.init_graph()
 		# Add an op to initialize the variables.
 			self.init_op = tf.initialize_all_variables()
 		self.sess.run(self.init_op)
 
 		# Add ops to save and restore all the variables.
-		self.saver = tf.train.Saver()
+		with tf.device('/gpu:0'):		
+			self.saver = tf.train.Saver()
 		print("Deep Q Network created and initialized")
 
 
