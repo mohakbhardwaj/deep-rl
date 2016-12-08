@@ -80,8 +80,8 @@ class DQNetwork(ActionValueNetwork):
 			return state_input, output
 		else:
 			state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.num_observations])
-			net = tflearn.fully_connected(state_input, 30, activation = 'relu')
-			net = tflearn.fully_connected(net, 20, activation = 'relu')
+			net = tflearn.fully_connected(state_input, 100, activation = 'relu')
+			net = tflearn.fully_connected(net, 100, activation = 'relu')
 			output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
 			return state_input, output
 	def init_graph(self):
