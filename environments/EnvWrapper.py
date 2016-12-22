@@ -17,7 +17,7 @@ class Env(object):
 	#Currently supports vision as described in DQN Atari paper
 
 	def __init__(self, env_name, w_out, h_out, \
-		history_length, vision =False):
+		history_length, vision = False):
 		
 		'''
 		@param env_name : name of the environment
@@ -81,7 +81,7 @@ class Env(object):
 		if self.vision:
 			s = np.empty((self.history_length, self.h_out, self.w_out))
 		else:
-			s= np.empty((self.history_length, self.observation_length)) 
+			s = np.empty((self.history_length, self.observation_length)) 
 		s[:self.history_length, ...] = previous_frames
 		s[self.history_length-1] = observation
 		#Update the state_buffer

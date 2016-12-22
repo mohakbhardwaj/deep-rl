@@ -26,8 +26,9 @@ class DQNetwork(ActionValueNetwork):
 		num_epochs = 1 ,\
 		frameskip = 4 ,\
 		frameheight = 84 ,\
-		framewidth = 84,
-		vision = True):
+		framewidth = 84,\
+		vision = True ,\
+		mode = "cpu"):
 
 		self.num_actions = num_actions
 		self.num_observations = num_observations
@@ -44,21 +45,18 @@ class DQNetwork(ActionValueNetwork):
 
 		self.hidden_fc = 512
 		self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+		if mode == "gpu":
+			self.device = '/gpu:0'
+		else:
+			self.device = '/cpu:0'
 
-		#Change for compatibility with non-CNN
-		# if self.vision:
-		# 	self.state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.frameheight, self.framewidth])
-
-		# self.model = self.create_network()
-		# self.train_net = self.init_graph()
-		with tf.device('/gpu:0'):
+		with tf.device(self.device):
 			self.graph_ops = self.init_graph()
 		# Add an op to initialize the variables.
 			self.init_op = tf.initialize_all_variables()
 		self.sess.run(self.init_op)
-
 		# Add ops to save and restore all the variables.
-		with tf.device('/gpu:0'):		
+		with tf.device(self.device):		
 			self.saver = tf.train.Saver()
 		print("Deep Q Network created and initialized")
 
@@ -94,9 +92,7 @@ class DQNetwork(ActionValueNetwork):
 		target_input = tf.placeholder("float", [None])
 		relevant_q_value = tf.reduce_sum(tf.mul(q_value_output, action_input), reduction_indices=1)
 		cost = tflearn.mean_square(relevant_q_value, target_input)
-		# d_net = tflearn.regression(correct_loss, optimizer = 'adam', loss = 'mean_square', learning_rate = self.learning_rate)
 		optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
-		# train_net = tflearn.DNN(d_net)
 		train_net = optimizer.minimize(cost, var_list=network_params)
 		init = tf.initialize_all_variables()
 		saver = tf.train.Saver()
@@ -130,27 +126,18 @@ class DQNetwork(ActionValueNetwork):
 			action_vectors.append(action_vector)
 		return np.asarray(action_vectors)
 
-
  	def evaluate_values(self, input):
  		state_input = self.graph_ops["s"]
 		q_values= self.graph_ops['q_value_output'].eval(session = self.sess, feed_dict={state_input:[input]})
  		return q_values
 
  	def save_params(self, file_name):
-		save_path = self.saver.save(self.sess, "../../saved_models/dqn/" + file_name + ".ckpt")
+		save_path = self.saver.save(self.sess, "../data/saved_models/dqn/" + file_name + ".ckpt")
 		print("Model saved in file: %s" % save_path)
 
  	def load_params(self, file_name):
-		self.saver.restore(self.sess, "../../saved_models/dqn/" + file_name + ".ckpt")
-		print("Weights loaded from file ../../saved_models/dqn/" + file_name + ".ckpt")
-
-
-# sess = tf.Session()
-# o = 3
-# a_m = 5
-# a_min = 0
-# D = DQNConvNet(sess, o, a_m, a_min)
-# print("Constructed)")
+		self.saver.restore(self.sess, "../data/saved_models/dqn/" + file_name + ".ckpt")
+		print("Weights loaded from file ../data/saved_models/dqn/" + file_name + ".ckpt")
 
 
 

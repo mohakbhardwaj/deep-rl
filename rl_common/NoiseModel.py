@@ -71,13 +71,16 @@ class OUNoiseModel(NoiseModel):
 	# def plot_model():
 
 class EpsilonGreedy(NoiseModel):
-	def __init__(self, max_epsilon, min_epsilon, min_epsilon_frame, actions):
-		'''
-		@param actions : array containing possible action values eg. [1,4,7,-49]
-		'''
+	def __init__(self, env_action_dim, env_action_max, env_action_min, max_epsilon = 1.0, min_epsilon = 0.1, min_epsilon_frame = 1000000):
+
+		assert max_epsilon > 0
+		assert min_epsilon >= 0
+		assert max_epsilon >= min_epsilon
+		self.env_action_dim = env_action_dim
+		self.env_action_max = env_action_max
+		self.env_action_min = env_action_min
 		self.decay_rate = -(max_epsilon-min_epsilon)/min_epsilon_frame
 		self.decay_const = max_epsilon
-		self.actions = actions
 		self.epsilon = max_epsilon
 		self.min_epsilon = min_epsilon
 		
@@ -92,4 +95,4 @@ class EpsilonGreedy(NoiseModel):
 		if random_num > self.epsilon:
 			return best_action
 		else:
-			return np.random.randint(0, self.actions)
+			return np.random.randint(self.env_action_min, self.env_action_max)
