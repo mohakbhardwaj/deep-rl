@@ -16,6 +16,7 @@ import numpy as np
 from ValueNetworks import ActionValueNetwork
 #Activate INFO logs during training
 tf.logging.set_verbosity(tf.logging.INFO)
+
 class DQNetwork(ActionValueNetwork):
 	def __init__(self ,\
 		num_actions ,\
@@ -58,8 +59,8 @@ class DQNetwork(ActionValueNetwork):
 		# Add ops to save and restore all the variables.
 		with tf.device(self.device):		
 			self.saver = tf.train.Saver()
+			# self.summary_ops = super.build_summaries()
 		print("Deep Q Network created and initialized")
-
 
 	def create_network(self):
 		"""Constructs and initializes core network architecture"""
@@ -82,10 +83,10 @@ class DQNetwork(ActionValueNetwork):
 			net = tflearn.fully_connected(net, 100, activation = 'relu')
 			output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
 			return state_input, output
+	
 	def init_graph(self):
 		"""Overall architecture including target network,
 		gradient ops etc"""
-		# action_input = tflearn.input_data(tf.float32,shape = [None, self.num_actions])
 		state_input, q_value_output = self.create_network()
 		network_params = tf.trainable_variables()
 		action_input = tf.placeholder("float", [None, self.num_actions])

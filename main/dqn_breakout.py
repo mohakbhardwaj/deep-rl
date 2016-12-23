@@ -12,7 +12,7 @@ use_vision = True
 render_while_training = False
 
 env = Env('Breakout-v0', 84, 110, 4, use_vision)
-# env.start_monitor('../env_monitor/dqn-experiment-1')
+env.start_monitor('../data/env_monitor/dqn/breakout')
 agent = DQAgent( env,\
 				 discount_factor = 0.90 ,\
 				 learning_rate = 0.0001,\
@@ -33,5 +33,4 @@ agent = DQAgent( env,\
 
 agent.learn(render_while_training)
 
-
-# env.close_monitor()
+env.close_monitor()

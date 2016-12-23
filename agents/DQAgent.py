@@ -166,7 +166,6 @@ class DQAgent(RLAgent):
 				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
 				  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
 				  unclipped_average_reward, "Curr Epsilon: ", self.exploration_strategy.epsilon, "Steps passed: ", timestep)
-				#If num_episodes_passed%save_after_episodes is zero, save the  current learned weights
 				if (num_episodes_passed + 1)%self.save_after_episodes == 0:
 					print("Saving currently learned weights")
 					self.network.save_params(self.training_params_file)
