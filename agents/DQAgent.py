@@ -17,7 +17,7 @@ import csv
 class DQAgent(RLAgent):
 	def __init__(self,\
 				 env,\
-				 discount_factor = 0.90 ,\
+				 discount_factor = 0.99 ,\
 				 learning_rate = 0.0001,\
 				 max_training_steps = 10000000,\
 				 steps_per_epoch = 6000,\
@@ -115,7 +115,9 @@ class DQAgent(RLAgent):
 						q_vals = self.network.evaluate_values(s)
 						max_q = np.max(q_vals)
 						average_max_q_heldout += max_q
-				average_max_q_heldout /= self.batch_size	
+				average_max_q_heldout /= self.batch_size
+				log = ["av_max_q", average_max_q_heldout]
+				self.save_log_to_csv(log)	
 			#Initially just do random actions till you have enough frmaes to actually update
 			if self.replay_buffer.size() < self.batch_size:
 				action = self.env.sample_action() 
@@ -163,9 +165,9 @@ class DQAgent(RLAgent):
 				avg_reward += (cumulative_reward - avg_reward)/num_episodes_passed
 				log_info= [num_episodes_passed, cumulative_reward, episode_length, avg_reward, unclipped_episode_reward,unclipped_average_reward]
 				self.save_log_to_csv(log_info)
-				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
-				  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
-				  unclipped_average_reward, "Curr Epsilon: ", self.exploration_strategy.epsilon, "Steps passed: ", timestep)
+				#print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
+				#  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
+				#  unclipped_average_reward, "Curr Epsilon: ", self.exploration_strategy.epsilon, "Steps passed: ", timestep)
 				if (num_episodes_passed + 1)%self.save_after_episodes == 0:
 					print("Saving currently learned weights")
 					self.network.save_params(self.training_params_file)
@@ -206,8 +208,8 @@ class DQAgent(RLAgent):
 				curr_state = self.env.reset()
 				num_episodes_passed += 1
 				avg_reward += (episode_reward - avg_reward)/num_episodes_passed
-				print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", episode_reward, "Episode Length", episode_length,\
-				  "Average Reward Per Episode ", avg_reward, "Steps passed: ", timestep)
+				#print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", episode_reward, "Episode Length", episode_length,\
+				#  "Average Reward Per Episode ", avg_reward, "Steps passed: ", timestep)
 				episode_length = 0
 				episode_reward = 0
 			else:

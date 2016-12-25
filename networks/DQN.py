@@ -47,6 +47,7 @@ class DQNetwork(ActionValueNetwork):
 		self.hidden_fc = 512
 		self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 		if mode == "gpu":
+			print "Here"
 			self.device = '/gpu:0'
 		else:
 			self.device = '/cpu:0'

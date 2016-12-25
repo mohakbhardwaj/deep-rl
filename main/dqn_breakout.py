@@ -29,7 +29,7 @@ agent = DQAgent( env,\
 				 min_epsilon_timestep = 1000000,\
 				 vision = use_vision ,\
 				 warm_start = False ,\
-				 network_mode = "cpu")
+				 network_mode = "gpu")
 
 agent.learn(render_while_training)
 env.close_monitor()
