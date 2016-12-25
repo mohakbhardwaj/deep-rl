@@ -32,5 +32,4 @@ agent = DQAgent( env,\
 				 network_mode = "cpu")
 
 agent.learn(render_while_training)
-
 env.close_monitor()
