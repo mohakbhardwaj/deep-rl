@@ -22,6 +22,7 @@ class DQAgent(RLAgent):
 				 max_training_steps = 10000000,\
 				 steps_per_epoch = 6000,\
 				 buffer_size = 40000,\
+				 start_training_after = 400000 ,\
 				 batch_size = 32,\
 				 clip_rewards = True,\
 				 save_after_episodes = 3,\
@@ -41,6 +42,7 @@ class DQAgent(RLAgent):
 		self.max_training_steps = max_training_steps
 		self.steps_per_epoch = steps_per_epoch
 		self.buffer_size = buffer_size
+		self.start_training_after = start_training_after
 		self.batch_size = batch_size
 		self.clip_rewards = clip_rewards
 		self.save_after_episodes = save_after_episodes
@@ -117,7 +119,10 @@ class DQAgent(RLAgent):
 						average_max_q_heldout += max_q
 				average_max_q_heldout /= self.batch_size
 				log = ["av_max_q", average_max_q_heldout]
-				self.save_log_to_csv(log)	
+				self.save_log_to_csv(log)
+				print("[INFO]", "Num Episodes Passed: ", num_episodes_passed, "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward,\
+				 "Average Reward Per Episode(unclipped) ", unclipped_average_reward, "Curr Epsilon: ", self.exploration_strategy.epsilon, "Steps passed: ", timestep,\
+				 "Average Max Q (Heldout)", average_max_q_heldout)	
 			#Initially just do random actions till you have enough frmaes to actually update
 			if self.replay_buffer.size() < self.batch_size:
 				action = self.env.sample_action() 
@@ -138,7 +143,7 @@ class DQAgent(RLAgent):
 			#Append the experience to replay buffer
 			self.replay_buffer.add(curr_state, action, reward, terminal, next_state)
 			#Again check if training can be done
-			if self.replay_buffer.size() >= self.batch_size:
+			if self.replay_buffer.size() >= self.start_training_after:
 				#Sample a batch form experience buffer
 				#Calculate targets from the batch
 				s_batch, a_batch, r_batch, t_batch, s2_batch = self.replay_buffer.sample_batch(self.batch_size)	
