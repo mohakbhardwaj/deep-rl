@@ -12,7 +12,7 @@ use_vision = True
 render_while_training = False
 
 env = Env('Breakout-v0', 84, 84, 4, use_vision)
-#env.start_monitor('../data/env_monitor/dqn/breakout')
+env.start_monitor('../data/env_monitor/dqn/breakout')
 agent = DQAgent( env,\
 				 discount_factor = 0.90 ,\
 				 learning_rate = 0.0001,\
@@ -30,7 +30,8 @@ agent = DQAgent( env,\
 				 min_epsilon_timestep = 100000,\
 				 vision = use_vision ,\
 				 warm_start = False ,\
-				 network_mode = "gpu")
+				 network_mode = "cpu")
 
-agent.learn(render_while_training)
-#env.close_monitor()
+# agent.learn(render_while_training)
+agent.test(100, render_env = True)
+env.close_monitor()

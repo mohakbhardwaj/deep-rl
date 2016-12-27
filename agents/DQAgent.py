@@ -188,13 +188,13 @@ class DQAgent(RLAgent):
 		print("Training Done. Saving final model weights")
 		self.network.save_params(self.training_params_file)
 
-	def test(self, max_timesteps, render_env):
+	def test(self, max_episodes, render_env):
 		timestep = 0
 		curr_state = self.env.reset() #Get the initial state
-		cumulative_reward = 0 #Cumulative rewards in one episode
+		episode_reward = 0 #Cumulative rewards in one episode
 		avg_reward = 0 #Average reward per episode
-		num_episodes_passed = 0
 		episode_length = 0
+		curr_episode = 1
 		#Load params from file
 		print("Loading parameters")
 		try:
@@ -202,7 +202,7 @@ class DQAgent(RLAgent):
 			print("Weights Loaded")
 		except:
 			print("Loading failed!")
-		while timestep < max_timesteps:
+		while curr_episode <= max_episodes:
 			if render_env: 
 				self.env.render()
 			best_action = self.network.get_best_action(curr_state)
@@ -211,10 +211,10 @@ class DQAgent(RLAgent):
 			episode_reward += reward
 			if terminal:
 				curr_state = self.env.reset()
-				num_episodes_passed += 1
-				avg_reward += (episode_reward - avg_reward)/num_episodes_passed
-				#print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", episode_reward, "Episode Length", episode_length,\
-				#  "Average Reward Per Episode ", avg_reward, "Steps passed: ", timestep)
+				avg_reward += (episode_reward - avg_reward)/curr_episode
+				print("[INFO]", "Episode Number: ", curr_episode, "Episode Reward ", episode_reward, "Episode Length", episode_length,\
+				 "Average Reward Per Episode ", avg_reward)
+				curr_episode += 1
 				episode_length = 0
 				episode_reward = 0
 			else:
