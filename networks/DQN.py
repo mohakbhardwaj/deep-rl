@@ -54,7 +54,6 @@ class DQNetwork(ActionValueNetwork):
 
 		with tf.device(self.device):
 			self.graph_ops = self.init_graph()
-		# Add an op to initialize the variables.
 			self.init_op = tf.initialize_all_variables()
 		self.sess.run(self.init_op)
 		# Add ops to save and restore all the variables.
@@ -77,19 +76,21 @@ class DQNetwork(ActionValueNetwork):
 			net = tflearn.conv_2d(net, 64, 3, strides = 1, activation = 'relu')
 			net = tflearn.fully_connected(net, self.hidden_fc, activation = 'relu')
 			output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
-			return state_input, output
+			network_params = tf.trainable_variables()
+			return state_input, output, network_params
 		else:
 			state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.num_observations])
 			net = tflearn.fully_connected(state_input, 100, activation = 'relu')
 			net = tflearn.fully_connected(net, 100, activation = 'relu')
 			output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
-			return state_input, output
+			network_params = tf.trainable_variables()
+			return state_input, output, network_params
 	
 	def init_graph(self):
 		"""Overall architecture including target network,
 		gradient ops etc"""
-		state_input, q_value_output = self.create_network()
-		network_params = tf.trainable_variables()
+		state_input, q_value_output, network_params = self.create_network()
+		# network_params = tf.trainable_variables()
 		action_input = tf.placeholder("float", [None, self.num_actions])
 		target_input = tf.placeholder("float", [None])
 		relevant_q_value = tf.reduce_sum(tf.mul(q_value_output, action_input), reduction_indices=1)
@@ -140,6 +141,17 @@ class DQNetwork(ActionValueNetwork):
  	def load_params(self, file_name):
 		self.saver.restore(self.sess, "../data/saved_models/dqn/" + file_name + ".ckpt")
 		print("Weights loaded from file ../data/saved_models/dqn/" + file_name + ".ckpt")
+
+	def get_params(self):
+		# print "Before setting"
+		# print self.sess.run(self.graph_ops['network_params'][0])
+		return self.graph_ops['network_params']
+
+	def set_params(self, input_params):
+		# print "After setting"
+		[self.graph_ops['network_params'][i].assign(input_params[i])
+		for i in range(len(self.graph_ops['network_params']))]
+		# print self.sess.run(self.graph_ops['network_params'][0])
 
 
 

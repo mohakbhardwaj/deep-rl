@@ -10,9 +10,9 @@ from agents.DQAgent import DQAgent
 
 use_vision = True
 render_while_training = False
+evaluate = False
 
 env = Env('Breakout-v0', 84, 84, 4, use_vision)
-env.start_monitor('../data/env_monitor/dqn/breakout')
 agent = DQAgent( env,\
 				 discount_factor = 0.90 ,\
 				 learning_rate = 0.0001,\
@@ -32,6 +32,11 @@ agent = DQAgent( env,\
 				 warm_start = False ,\
 				 network_mode = "cpu")
 
-# agent.learn(render_while_training)
-agent.test(100, render_env = True)
-env.close_monitor()
+
+if evaluate:
+	env.start_monitor('../data/env_monitor/dqn/breakout')
+	agent.test(100, render_env = True)
+	env.close_monitor()
+else:
+	agent.learn(render_while_training)
+

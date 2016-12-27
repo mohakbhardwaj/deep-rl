@@ -70,6 +70,17 @@ class DQAgent(RLAgent):
 								self.env.w_out,\
 								self.vision ,\
 								network_mode)
+		self.target_network = DQNetwork(self.num_actions,\
+						env.observation_length,\
+						self.discount_factor,\
+						self.batch_size, \
+						self.learning_rate,\
+						1,\
+						self.env.history_length,\
+						self.env.h_out,\
+						self.env.w_out,\
+						self.vision ,\
+						network_mode)
 
 		self.print_csv_header()
 
@@ -170,16 +181,13 @@ class DQAgent(RLAgent):
 				avg_reward += (cumulative_reward - avg_reward)/num_episodes_passed
 				log_info= [num_episodes_passed, cumulative_reward, episode_length, avg_reward, unclipped_episode_reward,unclipped_average_reward]
 				self.save_log_to_csv(log_info)
-				#print("[INFO]", "Episode Number: ", num_episodes_passed, "Episode Reward ", cumulative_reward, "Episode Length", episode_length,\
-				#  "Average Reward Per Episode ", avg_reward, "Episode Reward(unclipped) ", unclipped_episode_reward, "Average Reward Per Episode(unclipped) ",\
-				#  unclipped_average_reward, "Curr Epsilon: ", self.exploration_strategy.epsilon, "Steps passed: ", timestep)
 				if (num_episodes_passed + 1)%self.save_after_episodes == 0:
 					print("Saving currently learned weights")
 					self.network.save_params(self.training_params_file)
 				#Reset episode statistics				
 				cumulative_reward = 0
 				unclipped_episode_reward = 0
-				episode_length = 0		
+				episode_length = 0
 			else:
 				curr_state = next_state
 				episode_length += 1
