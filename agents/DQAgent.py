@@ -140,15 +140,14 @@ class DQAgent(RLAgent):
           action = self.exploration_strategy.get_action(timestep,best_action)
         
         next_state, reward, terminal, info = self.env.step(action)  
-        
-        if self.replay_buffer.size() < self.batch_size:        
-          self.heldout_states.add(curr_state, action, reward, terminal, next_state)
-        
+          
         unclipped_episode_reward += reward
         #Clip the reward 
         if self.clip_reward:
             reward = self.clip_reward(reward)
         cumulative_reward += reward
+        if self.replay_buffer.size() < self.batch_size:        
+          self.heldout_states.add(curr_state, action, reward, terminal, next_state)
         #Append the experience to replay buffer
         self.replay_buffer.add(curr_state, action, reward, terminal, next_state)
         #Train the network
@@ -171,7 +170,7 @@ class DQAgent(RLAgent):
             self.network.train(s_batch, target_batch, a_batch)
         # Periodically update target network
         if (timestep % self.target_network_update) == 0:  
-          print("[INFO", "Timestep: ", timestep," Updating target network params")
+          # print("[INFO", "Timestep: ", timestep," Updating target network params")
           self.network.update_target_network_params()
         
         if terminal:

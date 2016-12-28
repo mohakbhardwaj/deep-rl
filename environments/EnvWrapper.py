@@ -77,7 +77,7 @@ class Env(object):
 		if len(previous_frames.shape) < 3:
 			previous_frames = previous_frames.reshape(previous_frames.shape[0], previous_frames.shape[1])
 		# print observation
-		s=np.array([])
+		s = np.array([])
 		if self.vision:
 			s = np.empty((self.history_length, self.h_out, self.w_out))
 		else:

@@ -1,2 +1,2 @@
-model_checkpoint_path: "dqn_breakout.ckpt"
-all_model_checkpoint_paths: "dqn_breakout.ckpt"
+model_checkpoint_path: "dqn_cartpole.ckpt"
+all_model_checkpoint_paths: "dqn_cartpole.ckpt"
