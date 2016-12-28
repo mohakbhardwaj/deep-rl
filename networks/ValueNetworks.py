@@ -42,15 +42,24 @@ class ActionValueNetwork(object):
 	def init_graph(self):
 		"""Overall architecture includingtarget network, gradient ops etc"""
 		raise NotImplementedError
-	def train(self, current_state_batch,target_batch):
+	def train(self, state_batch, target_batch, action_batch):
 		"""Train using mini-batches as input"""
 		raise NotImplementedError
-	def evaluate_value(self, state_input, target_input):
-		"""Return value for a state"""
+	def get_best_action(self, state):
+		"""Return action with max q-value in the state"""
 		raise NotImplementedError
-	def update_target_network(self):
+	def to_action_input(self, action_batch):
+		"""Convert the action values in the action_batch to vector values"""
+		raise NotImplementedError
+	def evaluate_values(self, state_input):
+		"""Return all action values for a state"""
+		raise NotImplementedError
+	def evaluate_values_target(self, input):
+		"""Return all action values for a state but using target network instead"""
+		raise NotImplementedError    	
+	def update_target_network_params(self):
 		"""Update the target network"""
-		pass
+		raise NotImplementedError
 	def save_params(self):
 		"""Save network parameters to file"""
 		pass
