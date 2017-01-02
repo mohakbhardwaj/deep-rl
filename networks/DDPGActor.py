@@ -1,39 +1,16 @@
 #!/usr/bin/env python
 
-"""Module for actor networks for DDPG 
-   Two types of actor networks will be used:
-   A convolution neural network for raw image input
-   A MLP for feature input """
+"""DDPG Actor Network class with target network
+  Hyperparameters and architecture from "Continuous Control with Deep Rinforcement Learning- Lillicrap et al."
+  https://arxiv.org/pdf/1509.02971v2.pdf
+  Created on: December 30, 2016
+  Author: Mohak Bhardwaj"""
 import tensorflow as tf
 import numpy as np
-import PolicyNetwork
 
 
-class DDPGActorNetwork(PolicyNetwork):
-	def __init__( self
-				, env
-				, discount_factor = 0.90
-				, learning_rate = 0.0001):
-		self.env = env
-		self.discount_factor = discount_factor
-		self.learning_rate = learning_rate
 
 
-class DDPGConvNetActor(DDPGActorNetwork):
-	def __init__(self
-				, env
-				, discount_factor = 0.90
-				, learning_rate = 0.0001):
-		super(DDPGActorNetwork, self).__init__(env, discount_factor, learning_rate)
-#[TODO: Implement rest of the network]
-
-
-class DDPGMLPActor(DDPGActorNetwork):
-	def __init__(self
-				, env
-				, discount_factor = 0.90
-				, learning_rate = 0.0001):
-		super(DDPGActorNetwork, self).__init__(env, discount_factor, learning_rate)
 
 
 
