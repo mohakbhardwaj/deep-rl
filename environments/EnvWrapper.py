@@ -89,8 +89,8 @@ class Env(object):
 		self.state_buffer.append(observation)
 		return s, reward, done, info
 	
-	def start_monitor(self, location, force = True):
-		self.env.monitor.start(location, force = force)
+	def start_monitor(self, location, video_callable = False, force = True):
+		self.env.monitor.start(location, video_callable = False, force = force)
 
 	def close_monitor(self):
 		self.env.monitor.close()

@@ -16,7 +16,7 @@ from ValueNetworks import ActionValueNetwork
 #Activate INFO logs during training
 tf.logging.set_verbosity(tf.logging.INFO)
 
-class DDPGCritic(ActionValueNetwork):
+class DQNetwork(ActionValueNetwork):
   def __init__(self ,\
     sess ,\
     num_actions ,\
@@ -46,7 +46,6 @@ class DDPGCritic(ActionValueNetwork):
     self.frameheight = frameheight
     self.framewidth = framewidth
     self.vision = vision
-    tf.set_random_seed(1234)
     if mode == "gpu":
       self.device = '/gpu:0'
     else:
@@ -55,8 +54,7 @@ class DDPGCritic(ActionValueNetwork):
       self.graph_ops = self.init_graph()
       self.init_op = tf.initialize_all_variables()
     self.sess.run(self.init_op)
-    # self.summary_ops = super.build_summaries()
-    print("Deep Q Network created and initialized")
+    print("Critic Network created and initialized")
 
   def create_network(self):
     """Constructs and initializes core network architecture"""
@@ -159,11 +157,7 @@ class DDPGCritic(ActionValueNetwork):
     self.sess.run(assign_op)
 
   def update_target_network_params(self):
-    # print "Before resetting"
-    # print self.sess.run(self.graph_ops['network_params'][0])
     self.sess.run(self.graph_ops['reset_params_t'])
-    # print "After resetting"
-    # print self.sess.run(self.graph_ops['network_params_t'][0])
 
 
 
