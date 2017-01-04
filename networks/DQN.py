@@ -86,13 +86,14 @@ class DQNetwork(ActionValueNetwork):
     tf.mul(network_params_t[i], 1. - self.tau))
     for i in range(len(network_params_t))]
     #Cost and gradient operations
-    action_input = tf.placeholder("float", [None, self.num_actions])
+    
+    action_input = tf.placeholder(shape = [None], dtype = tf.int32)
+    action_onehot = tf.one_hot(action_input, self.num_actions, dtype = tf.float32)
     target_input = tf.placeholder("float", [None])
-    relevant_q_value = tf.reduce_sum(tf.mul(q_value_output, action_input), reduction_indices=1)
+    relevant_q_value = tf.reduce_sum(tf.mul(q_value_output, action_onehot), reduction_indices=1)
     cost = tflearn.mean_square(relevant_q_value, target_input)
     optimizer = tf.train.RMSPropOptimizer(learning_rate = self.learning_rate, decay = 0.95, momentum = 0.95, epsilon = 0.01)
     train_net = optimizer.minimize(cost, var_list=network_params)
-    init = tf.initialize_all_variables()
     saver = tf.train.Saver()
     graph_operations = {"s": state_input,\
               "q_value_output": q_value_output,\
@@ -108,11 +109,11 @@ class DQNetwork(ActionValueNetwork):
     return graph_operations
 
   def train(self, state_batch, target_batch, action_batch):
-    action_vectors = self.to_action_input(action_batch)
+    # action_vectors = self.to_action_input(action_batch)
     state_input = self.graph_ops["s"]
     target_input = self.graph_ops["target_input"]
     action_input = self.graph_ops["action_input"]
-    self.sess.run(self.graph_ops['train_net'], feed_dict={state_input: state_batch, action_input:action_vectors, target_input:target_batch})
+    self.sess.run(self.graph_ops['train_net'], feed_dict={state_input: state_batch, action_input: action_batch, target_input: target_batch})
 
   def get_best_action(self, state):
     q_values = self.evaluate_values(state)
