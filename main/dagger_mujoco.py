@@ -6,7 +6,7 @@ import gym
 sys.path.insert(0, os.path.abspath('..'))
 
 from environments.EnvWrapper import Env
-from agents.BehaviorCloningAgent import BehaviorCloningAgent
+from agents.DaggerAgent import DaggerAgent
 
 def main():
   import argparse
@@ -16,7 +16,7 @@ def main():
   parser.add_argument('--render', action='store_true')
   parser.add_argument("--max_timesteps", type=int)
   parser.add_argument('--num_episodes', type=int, default=20,
-                      help='Number of expert roll outs')
+                      help='Number of training episodes')
   parser.add_argument("--vision_based", type=bool, default=False,
                       help='Whether to use images as observations or not')
   
@@ -25,35 +25,33 @@ def main():
   evaluate = True
   monitor_training = True
   common_seed = 0
-  min_data_points = 50000 #Do not train if database file has less than this amount
   env = Env(args.envname, 84, 84, 1, args.vision_based)
   max_steps = args.max_timesteps or env.timestep_limit
   # print max_steps
-  agent = BehaviorCloningAgent( env,\
+  agent = DaggerAgent( env,\
            expert_policy_file = args.expert_policy_file,\
            max_training_episodes = args.num_episodes,\
            timesteps_per_episode = max_steps,\
-           learning_rate = 0.001,\
-           batch_size = 32,\
-           training_epochs = 1000,\
-           training_params_file = "bc_"+ args.envname,\
-           training_summary_file = "bc_"+ args.envname ,\
-           database_file = "database-" + args.envname ,\
+           mixing_ratio = 0.2,\
+           learning_rate = 0.005,\
+           batch_size = 10,\
+           training_epochs = 15,\
+           training_params_file = "dagger_"+ args.envname,\
+           training_summary_file = "dagger_"+ args.envname ,\
            seed = common_seed)
-
-  
+ 
   if evaluate:
-    env.start_monitor('../data/env_monitor/supervised/' + args.envname)
+    env.start_monitor('../data/env_monitor/supervised/dagger/' + args.envname)
     agent.test(max_testing_episodes = 20, render_env = True)
     env.close_monitor()
   else:
     env.setSeed(common_seed)
     if monitor_training:
-      env.start_monitor('../data/env_monitor/supervised/' + args.envname)
-      agent.learn(min_data_points, args.render)
+      env.start_monitor('../data/env_monitor/supervised/dagger/' + args.envname)
+      agent.learn(args.render)
       env.close_monitor()
     else:
-      agent.learn(min_data_points, args.render)
+      agent.learn(args.render)
 
 if __name__ == '__main__':
     main()

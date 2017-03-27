@@ -12,6 +12,7 @@ import tensorflow as tf
 import tflearn
 import numpy as np
 import random
+tf.logging.set_verbosity(tf.logging.INFO)
 
 class SupervisedLearningNetwork():
   def __init__(self,\
@@ -25,7 +26,6 @@ class SupervisedLearningNetwork():
              frameheight = 84,\
              framewidth = 84,\
              vision = False ,\
-
              mode = "cpu"):
     
     self.sess = sess
@@ -85,8 +85,9 @@ class SupervisedLearningNetwork():
 
   def train(self, database):
     #Shuffle the database
-    random.shuffle(database)
+    
     for epoch in xrange(self.training_epochs):
+      random.shuffle(database)
       avg_cost = 0.
       total_batch = int(len(database)/self.batch_size)
       for i in xrange(total_batch):
@@ -127,6 +128,31 @@ class SupervisedLearningNetwork():
     batch_x = np.array([_[0] for _ in batch])
     batch_y = np.array([_[1] for _ in batch])
     return batch_x, batch_y
+  
+  # def build_summaries(self):
+  #   episode_reward = tf.Variable(0.)
+  #   tf.scalar_summary("Reward", episode_reward)
+  #   episode_ave_max_q = tf.Variable(0.)
+
+  def calculate_error(self, observations, ground_truth):
+    num_data_points = len(ground_truth)
+    observations = np.asarray(observations)
+    ground_truth = np.asarray(ground_truth)
+    c = self.sess.run(self.graph_ops['cost'] ,\
+                     feed_dict = {self.graph_ops['s']: observations,\
+                                  self.graph_ops['target']:ground_truth})
+    return (c*self.batch_size)/num_data_points
+  
+  def calculate_error_each_dim(self, actions, expert_actions):
+    errors = [0]*self.action_dim
+    for a, e_a in zip(actions, expert_actions):
+      # print a[0], e_a[0]
+      for i in xrange(self.action_dim):        
+        e = np.absolute(e_a[0][i] - a[0][i])
+        errors[i] += e
+    return np.asarray(errors)/len(actions)
+
+
 
 
 

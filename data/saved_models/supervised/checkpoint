@@ -1,2 +1,2 @@
-model_checkpoint_path: "bc_Reacher-v1.ckpt"
-all_model_checkpoint_paths: "bc_Reacher-v1.ckpt"
+model_checkpoint_path: "dagger_Reacher-v1.ckpt"
+all_model_checkpoint_paths: "dagger_Reacher-v1.ckpt"

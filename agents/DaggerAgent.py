@@ -15,36 +15,35 @@ import tensorflow as tf
 import numpy as np
 import pickle
 
-class BehaviorCloningAgent():
+class DaggerAgent():
   def __init__(self,\
              env ,\
              expert_policy_file ,\
              max_training_episodes = 20 ,\
              timesteps_per_episode = 2000 ,\
+             mixing_ratio = 0.5 ,\
              learning_rate = 0.001 ,\
              batch_size = 32 ,\
              training_epochs = 15,\
-             training_params_file = "bc_1" ,\
-             training_summary_file = "bc_1" ,\
-             database_file = "database" ,\
+             training_params_file = "dagger_1" ,\
+             training_summary_file = "dagger_1" ,\
              seed = 1234 ,\
              ):
     self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))#, log_device_placement=True))
     self.env = env
     self.max_training_episodes = max_training_episodes
     self.timesteps_per_episode = timesteps_per_episode
+    self.mixing_ratio = mixing_ratio
     self.learning_rate = learning_rate
     self.batch_size = batch_size
     self.training_epochs = training_epochs
     self.seed = seed
     self.training_params_file = training_params_file
-    self.summary_dir = "../data/summaries/behavior_cloning/" + training_summary_file
-    self.database_file_name = "../imitation_learning/training_data/" + database_file + ".pkl"
-     
-    # tf.set_random_seed(seed)
+    self.summary_dir = "../data/summaries/dagger/" + training_summary_file
+    
+    tf.set_random_seed(seed)
     np.random.seed(seed)
     # print self.env.observation_dim
-    # self.sess = tf.Session(tf.ConfigProto(allow_soft_placement=True, log_device_placement=True))
     
     self.network = SupervisedLearningNetwork(self.sess ,\
                                            self.env.action_dim ,\
@@ -60,44 +59,49 @@ class BehaviorCloningAgent():
     print('loaded and built')
     
   
-  def learn(self, min_data_points = 20000, render_env = False):
+  def learn(self, render_env = False):
     with self.sess:
-      database = self.try_load_database(self.database_file_name)
-      if len(database) < min_data_points:
-        print('sufficient expert data does not exist, creating roll-outs')
-        database = []
-        expert_returns = []
-        observations = []
-        actions = []      
-        for i in xrange(self.max_training_episodes):
-          print('Episode', i)
-          obs = self.env.reset()
-          done = False
-          totalr = 0.
-          steps = 0
-          while not done:
-            action = self.expert_policy_fn(obs)
-            observations.append(obs)
-            actions.append(action)
-            database.append((obs,action))
-            obs, reward, done, _ = self.env.step(action)
-            totalr += reward
-            steps += 1
-            if render_env:
-              self.env.render()
-            if steps % 100 == 0: print("%i/%i"%(steps, self.timesteps_per_episode))
-            if steps >= self.timesteps_per_episode:
-              break
-          expert_returns.append(totalr)
-        print('expert returns', expert_returns)
-        print('mean expert returns', np.mean(expert_returns))
-        print('std of expert returns', np.std(expert_returns))
-        print('storing database of expert rollouts. Number of datapoints', len(database))
-        self.write_database_to_file(database, self.database_file_name)
-      else:
-        print('sufficient expert data already exists! Number of datapoints', len(database))    
-      print('Training to imitate expert')
-      self.network.train(database)
+      database = []
+      returns = []
+      observations = []
+      actions = []      
+      for i in xrange(self.max_training_episodes):
+        print('Episode', i)
+        obs = self.env.reset()
+        done = False
+        totalr = 0.
+        steps = 0
+        #Mixing expert and learnt policy
+        if i == 0:
+          beta = 0
+        else:
+          if np.random.sample(1) > self.mixing_ratio:
+            beta = 1 #For learner
+            print('Chose Learner')
+          else:
+            beta = 0 #For expert
+            print('Chose Expert')
+        while not done:
+          action = self.expert_policy_fn(obs)  
+          database.append((obs,action))  
+          if beta == 1:
+            action = self.network.get_best_action(obs)
+          actions.append(action) #Chosen action stored
+          observations.append(obs) 
+          obs, reward, done, _ = self.env.step(action)
+          totalr += reward
+          steps += 1
+          if render_env:
+            self.env.render()
+          if steps % 100 == 0: print("%i/%i"%(steps, self.timesteps_per_episode))
+          if steps >= self.timesteps_per_episode:
+            break
+        returns.append(totalr)
+        print('Training to imitate expert')
+        self.network.train(database)
+      print('returns', returns)
+      print('mean returns', np.mean(returns))
+      print('std of returns', np.std(returns))   
       print('network trained, storing results')
       self.network.save_params(self.training_params_file)
       print('learnt params saved')
@@ -145,25 +149,3 @@ class BehaviorCloningAgent():
       print('std of returns', np.std(returns))
       print('mean error in actions', self.network.calculate_error(observations , expert_actions))
       print('mean error in actions along individual dimensions', self.network.calculate_error_each_dim(actions, expert_actions))
-  def try_load_database(self, file_name):
-    try:
-      with open(file_name, 'rb') as f:
-        database = pickle.load(f) 
-    except IOError:
-      database = []
-    return database
-
-  def write_database_to_file(self, database, file_name):
-    with open(file_name, 'wb') as f:
-      pickle.dump(database, f)
-
-  
-
-
-
-
-
-
-  # def build_summaries(self):
-  #   returns = 
-
