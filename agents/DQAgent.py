@@ -48,7 +48,7 @@ class DQAgent(RLAgent):
       self.start_training_after = start_training_after
       self.batch_size = batch_size
       self.target_network_update = target_network_update
-      self.gradient_update_frequency = gradient_update_frequency
+      self.gradient_update_frequency = gradient_updat_moe_frequency
       self.clip_rewards = clip_rewards
       self.save_after_episodes = save_after_episodes
       self.training_params_file = training_params_file
@@ -59,7 +59,7 @@ class DQAgent(RLAgent):
       self.min_epsilon = min_epsilon
       self.min_epsilon_timestep = min_epsilon_timestep
       self.tau = tau
-      self.num_actions =env.num_actions
+      self.num_actions =env.action
       
       tf.set_random_seed(seed)
       np.random.seed(seed)
@@ -69,8 +69,8 @@ class DQAgent(RLAgent):
       # self.heldout_states = SimpleBuffer(self.buffer_size)
       self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True))
       self.network = DQNetwork(self.sess ,\
-                              self.num_actions,\
-                              env.observation_length,\
+                              self.env.action_dim,\
+                              slef.env.observation_dim,\
                               self.discount_factor,\
                               self.batch_size, \
                               self.learning_rate,\

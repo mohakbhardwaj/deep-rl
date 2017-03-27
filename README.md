@@ -13,4 +13,6 @@
  - skimage
  
  - openAI Gym
+
+ <p> imitation_learning code builds from Berkeley's Deep RL course's code for expert policies</p>
   

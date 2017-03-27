@@ -89,4 +89,6 @@ ENV/
 .ropeproject
 
 #Folder
-tests/env_monitor/
+data/env_monitor/
+tests/env_monitor
+imitation_learning/training_data

@@ -151,31 +151,53 @@ class DDPGActorCritic():
     optimizer = tf.train.AdamOptimizer(learning_rate = self.critic_learning_rate)
     train_critic = optimizer.minimize(cost, var_list=[common_params, critic_seperate_params])
     action_grads = tf.gradients(output_c, action_input)
-
+    
     saver = tf.train.Saver()
     graph_operations = {"s": state_input,\
-              "q_value_output": q_value_output,\
               "action_input": action_input,\
+              "critic_output": output_c,\
+              "actor_output": output_a,\
               "target_input": target_input,\
-              "train_net": train_net,\
-              "network_params": network_params,\
+              "train_actor": train_actor,\
+              "train_critic": train_critic,\
+              "actor_gradient_input":action_gradient_input,\
+              "action_grads": action_grads,\
+              "common_params": common_params,\
+              "actor_seperate_params": actor_seperate_params,\
+              "critic_seperate_params": critic_seperate_params,\
               "s_t": state_input_t,\
-              "q_value_output_t": q_value_output_t,\
-              "network_params_t": network_params_t,\
-              "reset_params_t":reset_params_t,\
+              "critic_output_t": output_c_t,\
+              "actor_output_t": output_a_t,\
+              "common_params_t": common_params_t,\
+              "actor_seperate_params_t": actor_seperate_params_t,\
+              "critic_seperate_params_t": critic_seperate_params_t,\
+              "reset_common_params_t":reset_common_params_t,\
+              "reset_actor_seperate_params_t":reset_actor_seperate_params_t,\
+              "reset_critic_seperate_params_t":reset_critic_seperate_params_t,\
               "saver": saver}
     return graph_operations
 
   def train(self, state_batch, target_batch, action_batch):
-    action_vectors = self.to_action_input(action_batch)
+    # action_vectors = self.to_action_input(action_batch)
     state_input = self.graph_ops["s"]
     target_input = self.graph_ops["target_input"]
     action_input = self.graph_ops["action_input"]
-    self.sess.run(self.graph_ops['train_net'], feed_dict={state_input: state_batch, action_input:action_vectors, target_input:target_batch})
+    #Update critic
+    self.sess.run(self.graph_ops["train_critic"], feed_dict={state_input: state_batch, action_input:action_batch, target_input:target_batch})
+    #Obtain action gradients
+    actor_output = self.graph_ops["actor_output"]
+    action_grads = self.graph_ops["action_grads"]
+    action_gradient_input = self.graph_ops["action_gradient_input"]
+    a_outs = self.sess.run(actor_output, feed_dict={state_input: state_batch})
+    a_grads = self.sess.run(action_grads, feed_dict={state_input: state_batch, action_input: a_outs})
+    #Update actor with sampled gradients
+    self.sess.run(self.graph_ops["train_actor"], feed_dict={state_input: state_batch, action_gradient_input: a_grads})
+
 
   def get_best_action(self, state):
-    q_values = self.evaluate_values(state)
-    best_action = np.argmax(q_values)
+    state_input = self.graph_ops["s"]
+    actor_output = self.graph_ops["actor_output"]
+    best_action = self.sess.run(actor_output, feed_dict={state_input: [state]})
     return best_action
 
   def to_action_input(self, action_batch):
@@ -186,9 +208,10 @@ class DDPGActorCritic():
       action_vectors.append(action_vector)
     return np.asarray(action_vectors)
 
-  def evaluate_values(self, input):
+  def evaluate_values(self, state, action_vec):
     state_input = self.graph_ops["s"]
-    q_values= self.graph_ops['q_value_output'].eval(session = self.sess, feed_dict={state_input:[input]})
+    action_input = self.graph_ops["action_input"]
+    q_values= self.graph_ops["critic_output"].eval(session = self.sess, feed_dict={state_input:[state], action_input: action_vec})
     return q_values
 
   def evaluate_values_target(self, input):

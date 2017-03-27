@@ -86,7 +86,6 @@ class DQNetwork(ActionValueNetwork):
     tf.mul(network_params_t[i], 1. - self.tau))
     for i in range(len(network_params_t))]
     #Cost and gradient operations
-    
     action_input = tf.placeholder(shape = [None], dtype = tf.int32)
     action_onehot = tf.one_hot(action_input, self.num_actions, dtype = tf.float32)
     target_input = tf.placeholder("float", [None])
