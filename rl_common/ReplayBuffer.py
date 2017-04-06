@@ -37,7 +37,7 @@ class ReplayBuffer(object):
         #     self.buffer.popleft()
         #     self.buffer.append(experience)
         if self.obs is None:
-          self.obs    = np.empty([self.buffer_size] + list(s.shape), dtype=np.float32) #Change to uint8
+          self.obs    = np.empty([self.buffer_size] + list(s.shape), dtype=np.uint8) #Change to uint8
           self.action = np.empty([self.buffer_size]                , dtype=np.int32)
           self.reward = np.empty([self.buffer_size]                , dtype=np.float32)
           self.done   = np.empty([self.buffer_size]                , dtype=np.bool)

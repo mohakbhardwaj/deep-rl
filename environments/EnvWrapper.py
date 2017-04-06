@@ -60,7 +60,7 @@ class Env(object):
     dimensions"""
     processed_frame = obs
     if self.vision:
-      processed_frame = resize(rgb2gray(obs), (self.h_out, self.w_out))
+      processed_frame = resize(rgb2gray(obs), (self.h_out, self.w_out)).astype(np.uint8)
     return processed_frame
 
   def reset(self):
@@ -102,12 +102,6 @@ class Env(object):
     self.state_buffer.popleft()
     self.state_buffer.append(observation)
     return s, reward, done, info
-  
-  # def start_monitor(self, location, video_callable = False, force = True):
-  #   self.env.monitor.start(location, video_callable = False, force = force)
-
-  # def close_monitor(self):
-  #   self.env.monitor.close()
 
   def Monitor(self, location, video_callable = False, force = True):
     self.env = wrappers.Monitor(self.env, location, video_callable = video_callable, force = force)

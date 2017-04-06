@@ -114,7 +114,7 @@ class DQAgent(RLAgent):
           print '[INFO: Epoch Done | Timestep: %.2i '% int(timestep) , '| Episodes Passed:  %.2i' % int(num_episodes_passed),\
             ' | Average Reward Per Episode: %.2i' % int(avg_reward_per_episode), ' | Current Epsilon: %.4f' % float(self.exploration_strategy.epsilon), ']'
         #Initially execute uniform random policy and populate the experience buffer
-        if timestep < 2:   #self.start_training_after:
+        if timestep < self.start_training_after:
           print("Random action")
           action = self.env.sample_action()         
         #Otherwise follow the exploration strategy
@@ -133,7 +133,7 @@ class DQAgent(RLAgent):
         #Append the experience to replay buffer
         self.replay_buffer.add(curr_state[-1,:,:], action, reward, terminal)
         #Train the network
-        if (self.replay_buffer.size() > self.batch_size + 2) and ((timestep%self.gradient_update_frequency) == 0):
+        if (self.replay_buffer.size() > self.start_training_after) and ((timestep%self.gradient_update_frequency) == 0):
           #Sample a batch form experience buffer
           #Calculate targets from the batch
           s_batch, a_batch, r_batch, t_batch, s2_batch = self.replay_buffer.sample_batch(self.batch_size) 

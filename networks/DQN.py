@@ -60,8 +60,9 @@ class DQNetwork(ActionValueNetwork):
     """Constructs and initializes core network architecture"""
     if self.vision:
       #Change state to correct dimensions --->Required by tfearn
-      state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.frameheight, self.framewidth])
-      net = tf.transpose(state_input, [0,2,3,1])
+      state_input = tf.placeholder(tf.uint8, [None, self.frameskip, self.frameheight, self.framewidth])
+      state_input_float = tf.cast(state_input, tf.float32)/255.0
+      net = tf.transpose(state_input_float, [0,2,3,1])
       net = tflearn.conv_2d(net, 32, 8, strides = 4, activation = 'relu')
       net = tflearn.conv_2d(net, 64, 4, strides = 2, activation =  'relu')
       net = tflearn.conv_2d(net, 64, 3, strides = 1, activation = 'relu')
