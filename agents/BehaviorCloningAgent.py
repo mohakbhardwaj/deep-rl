@@ -28,6 +28,7 @@ class BehaviorCloningAgent():
              training_summary_file = "bc_1" ,\
              database_file = "database" ,\
              seed = 1234 ,\
+             render = False
              ):
     self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))#, log_device_placement=True))
     self.env = env
@@ -40,7 +41,7 @@ class BehaviorCloningAgent():
     self.training_params_file = training_params_file
     self.summary_dir = "../data/summaries/behavior_cloning/" + training_summary_file
     self.database_file_name = "../imitation_learning/training_data/" + database_file + ".pkl"
-     
+    self.render_env = render
     # tf.set_random_seed(seed)
     np.random.seed(seed)
     # print self.env.observation_dim
@@ -54,16 +55,19 @@ class BehaviorCloningAgent():
                                            self.training_epochs ,\
                                            self.env.history_length ,\
                                            self.env.h_out ,\
-                                           self.env.w_out)
+                                           self.env.w_out ,\
+                                           mode = 'gpu')
     print("loading and building expert policy")
     self.expert_policy_fn = load_policy("../" + expert_policy_file)
     print('loaded and built')
     
   
-  def learn(self, min_data_points = 20000, render_env = False):
+  def learn(self, min_data_points = 20000):
     with self.sess:
       database = self.try_load_database(self.database_file_name)
-      if len(database) < min_data_points:
+      database_size = len(database) 
+      print("Database size", database_size)
+      if database_size < min_data_points:
         print('sufficient expert data does not exist, creating roll-outs')
         database = []
         expert_returns = []
@@ -83,7 +87,7 @@ class BehaviorCloningAgent():
             obs, reward, done, _ = self.env.step(action)
             totalr += reward
             steps += 1
-            if render_env:
+            if self.render_env:
               self.env.render()
             if steps % 100 == 0: print("%i/%i"%(steps, self.timesteps_per_episode))
             if steps >= self.timesteps_per_episode:
@@ -106,7 +110,7 @@ class BehaviorCloningAgent():
 
 
 
-  def test(self, max_testing_episodes = 20, render_env = True):
+  def test(self, num_testing_episodes = 20):
     returns = []
     observations = []
     actions = []
@@ -134,7 +138,7 @@ class BehaviorCloningAgent():
           obs, reward, done, _ = self.env.step(action)
           totalr += reward
           steps += 1
-          if render_env:
+          if self.render_env:
             self.env.render()
           if steps % 100 == 0: print("%i/%i"%(steps, self.timesteps_per_episode))
           if steps >= self.timesteps_per_episode:
@@ -145,6 +149,7 @@ class BehaviorCloningAgent():
       print('std of returns', np.std(returns))
       print('mean error in actions', self.network.calculate_error(observations , expert_actions))
       print('mean error in actions along individual dimensions', self.network.calculate_error_each_dim(actions, expert_actions))
+  
   def try_load_database(self, file_name):
     try:
       with open(file_name, 'rb') as f:
@@ -158,12 +163,6 @@ class BehaviorCloningAgent():
       pickle.dump(database, f)
 
   
-
-
-
-
-
-
   # def build_summaries(self):
   #   returns = 
 

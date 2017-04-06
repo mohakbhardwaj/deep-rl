@@ -12,7 +12,7 @@ import tensorflow as tf
 import tflearn
 import numpy as np
 import random
-tf.logging.set_verbosity(tf.logging.INFO)
+# tf.logging.set_verbosity(tf.logging.INFO)
 
 class SupervisedLearningNetwork():
   def __init__(self,\
@@ -45,9 +45,10 @@ class SupervisedLearningNetwork():
       self.device = '/gpu:0'
     else:
       self.device = '/cpu:0'
+    
     with tf.device(self.device):
       self.graph_ops = self.init_graph()
-      self.init_op = tf.initialize_all_variables()
+      self.init_op = tf.global_variables_initializer()
     self.sess.run(self.init_op)
     print('network created and initialized')
 
@@ -57,8 +58,8 @@ class SupervisedLearningNetwork():
       raise NotImplementedError
     else:
       state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.observation_dim])
-      net = tflearn.fully_connected(state_input, 400, activation='relu')
-      net = tflearn.fully_connected(net, 300, activation ='relu')
+      net = tflearn.fully_connected(state_input, 40, activation='relu')
+      net = tflearn.fully_connected(net, 30, activation ='relu')
       # net = tflearn.fully_connected(net, 300, activation = 'relu')
       output = tflearn.fully_connected(net, self.action_dim, activation = 'linear')
     return state_input, output
@@ -68,8 +69,9 @@ class SupervisedLearningNetwork():
     """Overall architecture including target network,
     gradient ops etc"""
     state_input, output = self.create_network()
+    print output.shape
     network_params = tf.trainable_variables()
-    target = tf.placeholder(tf.float32, [None, self.frameskip, self.action_dim])
+    target = tf.placeholder(tf.float32, [None, self.action_dim])
     cost = tf.reduce_sum(tf.pow(output - target, 2))/(2*self.batch_size)
     optimizer = tf.train.RMSPropOptimizer(learning_rate = self.learning_rate)
     train_net = optimizer.minimize(cost, var_list = network_params)
@@ -85,9 +87,9 @@ class SupervisedLearningNetwork():
 
   def train(self, database):
     #Shuffle the database
-    
+    random.shuffle(database)
     for epoch in xrange(self.training_epochs):
-      random.shuffle(database)
+      # random.shuffle(database)
       avg_cost = 0.
       total_batch = int(len(database)/self.batch_size)
       for i in xrange(total_batch):
@@ -127,8 +129,13 @@ class SupervisedLearningNetwork():
     batch = database[i*self.batch_size: (i+1)*self.batch_size]
     batch_x = np.array([_[0] for _ in batch])
     batch_y = np.array([_[1] for _ in batch])
+    batch_y = batch_y.reshape((self.batch_size, self.action_dim))
     return batch_x, batch_y
   
+  def reset(self):
+    self.sess.run(self.init_op)
+
+
   # def build_summaries(self):
   #   episode_reward = tf.Variable(0.)
   #   tf.scalar_summary("Reward", episode_reward)
@@ -137,7 +144,7 @@ class SupervisedLearningNetwork():
   def calculate_error(self, observations, ground_truth):
     num_data_points = len(ground_truth)
     observations = np.asarray(observations)
-    ground_truth = np.asarray(ground_truth)
+    ground_truth = np.asarray(ground_truth).reshape(num_data_points, self.action_dim)
     c = self.sess.run(self.graph_ops['cost'] ,\
                      feed_dict = {self.graph_ops['s']: observations,\
                                   self.graph_ops['target']:ground_truth})

@@ -28,6 +28,7 @@ class DaggerAgent():
              training_params_file = "dagger_1" ,\
              training_summary_file = "dagger_1" ,\
              seed = 1234 ,\
+             render = False
              ):
     self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))#, log_device_placement=True))
     self.env = env
@@ -40,7 +41,7 @@ class DaggerAgent():
     self.seed = seed
     self.training_params_file = training_params_file
     self.summary_dir = "../data/summaries/dagger/" + training_summary_file
-    
+    self.render_env = render
     tf.set_random_seed(seed)
     np.random.seed(seed)
     # print self.env.observation_dim
@@ -53,13 +54,14 @@ class DaggerAgent():
                                            self.training_epochs ,\
                                            self.env.history_length ,\
                                            self.env.h_out ,\
-                                           self.env.w_out)
+                                           self.env.w_out ,\
+                                           mode = "gpu")
     print("loading and building expert policy")
     self.expert_policy_fn = load_policy("../" + expert_policy_file)
     print('loaded and built')
     
   
-  def learn(self, render_env = False):
+  def learn(self):
     with self.sess:
       database = []
       returns = []
@@ -72,8 +74,9 @@ class DaggerAgent():
         totalr = 0.
         steps = 0
         #Mixing expert and learnt policy
-        if i == 0:
+        if i < 1:
           beta = 0
+          print('Chose Expert')
         else:
           if np.random.sample(1) > self.mixing_ratio:
             beta = 1 #For learner
@@ -91,18 +94,22 @@ class DaggerAgent():
           obs, reward, done, _ = self.env.step(action)
           totalr += reward
           steps += 1
-          if render_env:
+          if self.render_env:
             self.env.render()
           if steps % 100 == 0: print("%i/%i"%(steps, self.timesteps_per_episode))
           if steps >= self.timesteps_per_episode:
             break
-        returns.append(totalr)
+        returns.append(totalr) 
+        # self.network.reset()
         print('Training to imitate expert')
         self.network.train(database)
+        if i%10 == 0:
+          print('Storing current network')
+          self.network.save_params(self.training_params_file)
       print('returns', returns)
       print('mean returns', np.mean(returns))
       print('std of returns', np.std(returns))   
-      print('network trained, storing results')
+      print('network trained, storing final results')
       self.network.save_params(self.training_params_file)
       print('learnt params saved')
       # self.test(10)
@@ -110,7 +117,7 @@ class DaggerAgent():
 
 
 
-  def test(self, max_testing_episodes = 20, render_env = True):
+  def test(self, num_testing_episodes = 20):
     returns = []
     observations = []
     actions = []
@@ -123,7 +130,7 @@ class DaggerAgent():
       except:
         print "[ERR: Loading failed!]"
 
-      for i in xrange(max_testing_episodes):
+      for i in xrange(num_testing_episodes):
         print('Episode', i)
         obs = self.env.reset()
         done = False
@@ -138,7 +145,7 @@ class DaggerAgent():
           obs, reward, done, _ = self.env.step(action)
           totalr += reward
           steps += 1
-          if render_env:
+          if self.render_env:
             self.env.render()
           if steps % 100 == 0: print("%i/%i"%(steps, self.timesteps_per_episode))
           if steps >= self.timesteps_per_episode:

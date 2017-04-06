@@ -14,7 +14,7 @@ import tflearn
 import numpy as np
 from ValueNetworks import ActionValueNetwork
 #Activate INFO logs during training
-tf.logging.set_verbosity(tf.logging.INFO)
+# tf.logging.set_verbosity(tf.logging.INFO)
 
 class DQNetwork(ActionValueNetwork):
   def __init__(self ,\
@@ -52,7 +52,7 @@ class DQNetwork(ActionValueNetwork):
       self.device = '/cpu:0'
     with tf.device(self.device):
       self.graph_ops = self.init_graph()
-      self.init_op = tf.initialize_all_variables()
+      self.init_op = tf.global_variables_initializer()
     self.sess.run(self.init_op)
     print("Deep Q Network created and initialized")
 
@@ -82,14 +82,14 @@ class DQNetwork(ActionValueNetwork):
     state_input_t, q_value_output_t = self.create_network()
     network_params_t = tf.trainable_variables()[len(network_params):]
     #Add op for resetting target network parameters (soft-updates)
-    reset_params_t = [network_params_t[i].assign(tf.mul(network_params[i], self.tau) +\
-    tf.mul(network_params_t[i], 1. - self.tau))
+    reset_params_t = [network_params_t[i].assign(tf.multiply(network_params[i], self.tau) +\
+    tf.multiply(network_params_t[i], 1. - self.tau))
     for i in range(len(network_params_t))]
     #Cost and gradient operations
     action_input = tf.placeholder(shape = [None], dtype = tf.int32)
     action_onehot = tf.one_hot(action_input, self.num_actions, dtype = tf.float32)
     target_input = tf.placeholder("float", [None])
-    relevant_q_value = tf.reduce_sum(tf.mul(q_value_output, action_onehot), reduction_indices=1)
+    relevant_q_value = tf.reduce_sum(tf.multiply(q_value_output, action_onehot), axis=1)
     cost = tflearn.mean_square(relevant_q_value, target_input)
     optimizer = tf.train.RMSPropOptimizer(learning_rate = self.learning_rate, decay = 0.95, momentum = 0.95, epsilon = 0.01)
     train_net = optimizer.minimize(cost, var_list=network_params)
@@ -151,8 +151,8 @@ class DQNetwork(ActionValueNetwork):
 
   def set_params(self, input_params, tau):
     assign_op = \
-    [self.graph_ops['network_params'][i].assign(tf.mul(input_params[i], tau) +\
-    tf.mul(self.graph_ops['network_params'][i], 1. - tau))
+    [self.graph_ops['network_params'][i].assign(tf.multiply(input_params[i], tau) +\
+    tf.multiply(self.graph_ops['network_params'][i], 1. - tau))
     for i in range(len(self.graph_ops['network_params']))]
     self.sess.run(assign_op)
 

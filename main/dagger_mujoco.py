@@ -17,41 +17,42 @@ def main():
   parser.add_argument("--max_timesteps", type=int)
   parser.add_argument('--num_episodes', type=int, default=20,
                       help='Number of training episodes')
-  parser.add_argument("--vision_based", type=bool, default=False,
+  parser.add_argument("--vision_input", type=bool, default=False,
                       help='Whether to use images as observations or not')
   
   args = parser.parse_args()
 
   evaluate = True
   monitor_training = True
-  common_seed = 0
-  env = Env(args.envname, 84, 84, 1, args.vision_based)
+  common_seed = 1234
+  num_testing_episodes = 150
+  env = Env(args.envname, 84, 84, 1, args.vision_input)
   max_steps = args.max_timesteps or env.timestep_limit
-  # print max_steps
+  if evaluate or monitor_training:
+    env.Monitor('../data/env_monitor/supervised/dagger' + args.envname)
+  env.setSeed(common_seed)
+
+  #Need to do this as tensorflow hogs the gpu sometimes
+  if args.render:
+    env.render()
+  
   agent = DaggerAgent( env,\
            expert_policy_file = args.expert_policy_file,\
            max_training_episodes = args.num_episodes,\
            timesteps_per_episode = max_steps,\
-           mixing_ratio = 0.2,\
-           learning_rate = 0.005,\
-           batch_size = 10,\
-           training_epochs = 15,\
+           mixing_ratio = 0.1,\
+           learning_rate = 0.001,\
+           batch_size = 64,\
+           training_epochs = 10,\
            training_params_file = "dagger_"+ args.envname,\
            training_summary_file = "dagger_"+ args.envname ,\
-           seed = common_seed)
+           seed = common_seed ,\
+           render = args.render)
  
   if evaluate:
-    env.start_monitor('../data/env_monitor/supervised/dagger/' + args.envname)
-    agent.test(max_testing_episodes = 20, render_env = True)
-    env.close_monitor()
+    agent.test(num_testing_episodes)
   else:
-    env.setSeed(common_seed)
-    if monitor_training:
-      env.start_monitor('../data/env_monitor/supervised/dagger/' + args.envname)
-      agent.learn(args.render)
-      env.close_monitor()
-    else:
-      agent.learn(args.render)
+    agent.learn()
 
 if __name__ == '__main__':
     main()

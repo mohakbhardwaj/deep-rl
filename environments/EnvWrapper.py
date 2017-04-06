@@ -4,6 +4,7 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 import gym
+from gym import wrappers
 import numpy as np
 from skimage.transform import resize
 from skimage.color import rgb2gray
@@ -36,11 +37,21 @@ class Env(object):
     #[TODO]change when different environments are also implemented
     self.env = gym.make(env_name)
     # self.num_actions = self.env.action_space.n
-    self.action_dim = len(self.env.action_space.high)
+    if type(self.env.action_space) == gym.spaces.Box:
+      self.action_dim = len(self.env.action_space.high)
+    else:
+      self.action_dim = self.env.action_space.n
+    if type(self.env.observation_space) == gym.spaces.Box:
+      self.observation_dim = len(self.env.observation_space.high)
+    else:
+      self.observation_dim = self.env.observation_space.n
+    
     self.state_buffer = deque()
-    self.observation_dim =len(self.env.observation_space.high)
     self.timestep_limit = self.env.spec.timestep_limit
+    self.observation_space = self.env.observation_space
+    self.action_space = self.env.action_space
     print('environment observation space: %s, action space: %s' %(self.env.observation_space,self.env.action_space))        
+
   def setSeed(self, seedVal):
     self.env.seed(seedVal)
 
@@ -62,6 +73,7 @@ class Env(object):
 
   def render(self):
     self.env.render()
+
 
   def sample_action(self):
     # Sample random action
@@ -91,14 +103,15 @@ class Env(object):
     self.state_buffer.append(observation)
     return s, reward, done, info
   
-  def start_monitor(self, location, video_callable = False, force = True):
-    self.env.monitor.start(location, video_callable = False, force = force)
+  # def start_monitor(self, location, video_callable = False, force = True):
+  #   self.env.monitor.start(location, video_callable = False, force = force)
 
-  def close_monitor(self):
-    self.env.monitor.close()
+  # def close_monitor(self):
+  #   self.env.monitor.close()
 
-
-    
+  def Monitor(self, location, video_callable = False, force = True):
+    self.env = wrappers.Monitor(self.env, location, video_callable = video_callable, force = force)
+  
 
 
 
