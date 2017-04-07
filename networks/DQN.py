@@ -56,42 +56,49 @@ class DQNetwork(ActionValueNetwork):
     self.sess.run(self.init_op)
     print("Deep Q Network created and initialized")
 
-  def create_network(self):
+  def create_network(self, scope, reuse=False):
     """Constructs and initializes core network architecture"""
-    if self.vision:
-      #Change state to correct dimensions --->Required by tfearn
-      state_input = tf.placeholder(tf.uint8, [None, self.frameskip, self.frameheight, self.framewidth])
-      state_input_float = tf.cast(state_input, tf.float32)/255.0
-      net = tf.transpose(state_input_float, [0,2,3,1])
-      net = tflearn.conv_2d(net, 32, 8, strides = 4, activation = 'relu')
-      net = tflearn.conv_2d(net, 64, 4, strides = 2, activation =  'relu')
-      net = tflearn.conv_2d(net, 64, 3, strides = 1, activation = 'relu')
-      net = tflearn.fully_connected(net, 512, activation = 'relu')
-      output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
-    else:
-      state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.num_observations])
-      net = tflearn.fully_connected(state_input, 400, activation = 'relu')
-      net = tflearn.fully_connected(net, 300, activation = 'relu')
-      output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
-    return state_input, output
+    with tf.variable_scope(scope, reuse=reuse):
+      if self.vision:
+      #Change state to correct dimensions --->Required by tflearn
+        state_input = tf.placeholder(tf.uint8, [None, self.frameskip, self.frameheight, self.framewidth])
+        state_input_float = tf.cast(state_input, tf.float32)/255.0
+        net = tf.transpose(state_input_float, [0,2,3,1])
+        net = tflearn.conv_2d(net, 32, 8, strides = 4, activation = 'relu')
+        net = tflearn.conv_2d(net, 64, 4, strides = 2, activation =  'relu')
+        net = tflearn.conv_2d(net, 64, 3, strides = 1, activation = 'relu')
+        net = tflearn.fully_connected(net, 512, activation = 'relu')
+        output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
+      else:
+        state_input = tf.placeholder(tf.float32, [None, self.frameskip, self.num_observations])
+        net = tflearn.fully_connected(state_input, 400, activation = 'relu')
+        net = tflearn.fully_connected(net, 300, activation = 'relu')
+        output = tflearn.fully_connected(net, self.num_actions, activation = 'linear')
+      return state_input, output
   
   def init_graph(self):
     """Overall architecture including target network,
     gradient ops etc"""
-    state_input, q_value_output = self.create_network()
-    network_params = tf.trainable_variables()
-    state_input_t, q_value_output_t = self.create_network()
-    network_params_t = tf.trainable_variables()[len(network_params):]
+    state_input, q_value_output = self.create_network(scope='q_network')
+    # network_params = tf.trainable_variables()
+    network_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_network')
+    state_input_t, q_value_output_t = self.create_network(scope='target_q_network')
+    # network_params_t = tf.trainable_variables()[len(network_params):]
+    network_params_t = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_q_network')
     #Add op for resetting target network parameters (soft-updates)
     reset_params_t = [network_params_t[i].assign(tf.multiply(network_params[i], self.tau) +\
     tf.multiply(network_params_t[i], 1. - self.tau))
     for i in range(len(network_params_t))]
+    print "q weight 1" ,  network_params[0].name
+    print network_params_t[0].name
+    reset_params_t = tf.group(*reset_params_t)
     #Cost and gradient operations
     action_input = tf.placeholder(shape = [None], dtype = tf.int32)
     action_onehot = tf.one_hot(action_input, self.num_actions, dtype = tf.float32)
     target_input = tf.placeholder("float", [None])
     relevant_q_value = tf.reduce_sum(tf.multiply(q_value_output, action_onehot), axis=1)
-    cost = tflearn.mean_square(relevant_q_value, target_input)
+    # cost = tflearn.mean_square(relevant_q_value, target_input)
+    cost = tf.reduce_sum(tf.pow(relevant_q_value - target_input, 2))/(2*self.batch_size)
     optimizer = tf.train.RMSPropOptimizer(learning_rate = self.learning_rate, decay = 0.95, momentum = 0.95, epsilon = 0.01)
     train_net = optimizer.minimize(cost, var_list=network_params)
     saver = tf.train.Saver()

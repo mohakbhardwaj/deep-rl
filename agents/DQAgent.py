@@ -122,7 +122,8 @@ class DQAgent(RLAgent):
           best_action = self.network.get_best_action(curr_state)
           action = self.exploration_strategy.get_action(timestep,best_action)
         
-        next_state, reward, terminal, info = self.env.step(action)  
+        next_state, reward, terminal, info = self.env.step(action)
+        # print next_state.shape  
         episode_reward += reward
         q_value_pred = self.network.evaluate_values(curr_state)
         episode_average_max_q += np.max(q_value_pred)
@@ -133,7 +134,7 @@ class DQAgent(RLAgent):
         #Append the experience to replay buffer
         self.replay_buffer.add(curr_state[-1,:,:], action, reward, terminal)
         #Train the network
-        if (self.replay_buffer.size() > self.start_training_after) and ((timestep%self.gradient_update_frequency) == 0):
+        if (timestep > self.start_training_after) and ((timestep%self.gradient_update_frequency) == 0):
           #Sample a batch form experience buffer
           #Calculate targets from the batch
           s_batch, a_batch, r_batch, t_batch, s2_batch = self.replay_buffer.sample_batch(self.batch_size) 

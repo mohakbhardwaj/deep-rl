@@ -98,7 +98,6 @@ class ReplayBuffer(object):
         else:
             # this optimization has potential to saves about 30% compute time \o/
             img_h, img_w = self.obs.shape[1], self.obs.shape[2]
-            # print self.obs[start_idx:end_idx].shape
             # return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
             # print self.obs[start_idx:end_idx].shape
             return np.asarray(self.obs[start_idx:end_idx])
@@ -115,7 +114,7 @@ class SimpleBuffer(ReplayBuffer):
       r_batch  = np.asarray(self.reward[idxs])
       t_batch  = np.asarray(self.done[idxs])
       s2_batch = np.concatenate([self._encode_observation(idx + 1)[None] for idx in idxs], 0)
-
+      # print s_batch.shape
       return s_batch, a_batch, r_batch, t_batch, s2_batch
 
 class PrioritizedBuffer(ReplayBuffer):

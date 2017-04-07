@@ -83,7 +83,6 @@ class Env(object):
     """Execute an action in the environment and return the next reward, observation(set of history_length states)
     and update the current state_buffer"""
     observation, reward, done, info = self.env.step(action)
-
     if self.vision:
       observation = self.preprocess_frame(observation)
     previous_frames = np.array(self.state_buffer)
